@@ -55,7 +55,7 @@ export async function main(ns) {
   let hackCanRun = false;
   let hackRunning = ns.scriptRunning(hackPath, hostname);
 
-  const weakenWeight = growEnabled ? 0.5 : 1;
+  const weakenWeight = growEnabled ? 0.2 : 1;
 
   // loop here
   while (true) {

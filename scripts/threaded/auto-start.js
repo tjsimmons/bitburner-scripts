@@ -43,7 +43,9 @@ export async function main(ns) {
     "omega-net", // 32gb (28.15 usable)
     // 168.9
     "silver-helix", // 64gb (60.15 usable)
-    // 60.15
+    // 60.15,
+    "avmnite-02h", // 128gb (124.15 usable)
+    // 124.15
   ];
 
   const owned = [
@@ -54,16 +56,18 @@ export async function main(ns) {
 
   const usable = rooted.concat(owned);
 
-  // total: 386.40
+  // total: 510.55
   // foodnstuff, sigma, serv-1 = weaken (18 threads / 9%)
   // silver, serv-2 = hack (38 threads / 19%)
   // the rest = grow (142 threads / 72%)
 
   const weakenServers = ["foodnstuff", "sigma-cosmetics", "serv-0"];
   const hackServers = ["silver-helix", "serv-1"];
+  const weakenGrowServers = ["avmnite-02h"];
   const growServers = usable
     .filter((u) => weakenServers.indexOf(u) === -1)
-    .filter((u) => hackServers.indexOf(u) === -1);
+    .filter((u) => hackServers.indexOf(u) === -1)
+    .filter((u) => weakenGrowServers.indexOf(u) === -1);
 
   const weakenPad = 0;
   const growMaxPercent = 100;
@@ -87,25 +91,36 @@ export async function main(ns) {
   for (const host of hackServers) {
     await startHack(ns, host, target, hackStopPercent);
   }
+
+  for (const host of weakenGrowServers) {
+    await startWeakenGrow(ns, host, target, weakenPad, growMaxPercent);
+  }
 }
 
 /** @param {import("../..").NS} ns */
 const startWeaken = async (ns, host, target, weakenPad) => {
-  ns.toast(`${host} starting main for weaken`);
+  ns.toast(`${host} starting main for weaken`, "info");
   ns.exec(mainPath, host, threads, target, weakenPad, disabled, disabled);
   await ns.sleep(sleepDelay);
 };
 
 /** @param {import("../..").NS} ns */
 const startGrow = async (ns, host, target, growMaxPercent) => {
-  ns.toast(`${host} starting main for grow`);
+  ns.toast(`${host} starting main for grow`, "info");
   ns.exec(mainPath, host, threads, target, disabled, growMaxPercent, disabled);
   await ns.sleep(sleepDelay);
 };
 
 /** @param {import("../..").NS} ns */
 const startHack = async (ns, host, target, hackStopPercent) => {
-  ns.toast(`${host} starting main for hack`);
+  ns.toast(`${host} starting main for hack`, "info");
   ns.exec(mainPath, host, threads, target, disabled, disabled, hackStopPercent);
+  await ns.sleep(sleepDelay);
+};
+
+/** @param {import("../..").NS} ns */
+const startWeakenGrow = async (ns, host, target, weakenPad, growMaxPercent) => {
+  ns.toast(`${host} starting main for weaken/grow`, "info");
+  ns.exec(mainPath, host, threads, target, weakenPad, growMaxPercent, disabled);
   await ns.sleep(sleepDelay);
 };
