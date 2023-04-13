@@ -16,6 +16,7 @@ export async function main(ns) {
   const maxMoney = ns.getServerMaxMoney(target);
   let currentMoney = ns.getServerMoneyAvailable(target);
   let pastThreshold = isPastThreshold(currentMoney, maxMoney, thresholdPercent);
+  let growDidRun = false;
 
   do {
     ns.toast(
@@ -31,9 +32,15 @@ export async function main(ns) {
 
     currentMoney = ns.getServerMoneyAvailable(target);
     pastThreshold = isPastThreshold(currentMoney, maxMoney, thresholdPercent);
+
+    if (!growDidRun) {
+      growDidRun = true;
+    }
   } while (!pastThreshold);
 
-  ns.toast(`${target} grown to ${currentMoney.toFixed(3)}`, "success", 10000);
+  if (growDidRun) {
+    ns.toast(`${target} grown to ${currentMoney.toFixed(3)}`, "success", 10000);
+  }
 }
 
 const isPastThreshold = (current, max, threshold) =>

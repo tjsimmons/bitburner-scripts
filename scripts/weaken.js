@@ -15,6 +15,7 @@ export async function main(ns) {
 
   const minSecLevel = ns.getServerMinSecurityLevel(target) + minWeakenPad;
   let currentSecLevel = ns.getServerSecurityLevel(target);
+  let weakenDidRun = false;
 
   while (currentSecLevel > minSecLevel) {
     ns.toast(
@@ -28,11 +29,17 @@ export async function main(ns) {
     await ns.weaken(target);
 
     currentSecLevel = ns.getServerSecurityLevel(target);
+
+    if (!weakenDidRun) {
+      weakenDidRun = true;
+    }
   }
 
-  ns.toast(
-    `${target} reached desired security level ${minSecLevel.toFixed(3)}`,
-    "success",
-    10000
-  );
+  if (weakenDidRun) {
+    ns.toast(
+      `${target} reached desired security level ${minSecLevel.toFixed(3)}`,
+      "success",
+      10000
+    );
+  }
 }

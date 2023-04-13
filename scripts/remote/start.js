@@ -27,7 +27,7 @@ export async function main(ns) {
 }
 
 /** @param {import("../..").NS} ns */
-async function runScript(ns, target) {
+const runScript = async (ns, target) => {
   const mainScript = "/scripts/remote/main.js";
   const hackScript = "/scripts/remote/hack.js";
 
@@ -48,4 +48,4 @@ async function runScript(ns, target) {
   } else {
     ns.toast(`Script already running on ${target}`, "error");
   }
-}
+};

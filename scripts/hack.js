@@ -20,6 +20,7 @@ export async function main(ns) {
   let moneyAvailable = ns.getServerMoneyAvailable(target);
   const hackThreshold =
     ns.getServerMaxMoney(target) * (hackThresholdPercent / 100);
+  let hackDidRun = false;
 
   while (moneyAvailable >= hackThreshold) {
     ns.toast(
@@ -33,11 +34,17 @@ export async function main(ns) {
     await ns.hack(target);
 
     moneyAvailable = ns.getServerMoneyAvailable(target);
+
+    if (!hackDidRun) {
+      hackDidRun = true;
+    }
   }
 
-  ns.toast(
-    `${target} drained to ${hackThreshold.toFixed(3)}`,
-    "success",
-    10000
-  );
+  if (hackDidRun) {
+    ns.toast(
+      `${target} drained to ${hackThreshold.toFixed(3)}`,
+      "success",
+      10000
+    );
+  }
 }
