@@ -17,14 +17,20 @@ export async function main(ns) {
   let currentMoney = ns.getServerMoneyAvailable(target);
   let pastThreshold = isPastThreshold(currentMoney, maxMoney, thresholdPercent);
 
-  while (!pastThreshold) {
-    ns.toast(`Growing ${target} ${currentMoney} / ${maxMoney}`, "info", 10000);
+  do {
+    ns.toast(
+      `Growing ${target} ${currentMoney} / ${
+        maxMoney * (thresholdPercent / 100)
+      }`,
+      "info",
+      10000
+    );
 
     await ns.grow(target);
 
     currentMoney = ns.getServerMoneyAvailable(target);
     pastThreshold = isPastThreshold(currentMoney, maxMoney, thresholdPercent);
-  }
+  } while (!pastThreshold);
 
   ns.toast(`${target} grown to ${currentMoney}`, "success", 10000);
 }
