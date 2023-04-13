@@ -19,9 +19,10 @@ export async function main(ns) {
 
   do {
     ns.toast(
-      `Growing ${target} ${currentMoney} / ${
-        maxMoney * (thresholdPercent / 100)
-      }`,
+      `Growing ${target} ${currentMoney.toFixed(3)} / ${(
+        maxMoney *
+        (thresholdPercent / 100)
+      ).toFixed(3)}`,
       "info",
       10000
     );
@@ -32,7 +33,7 @@ export async function main(ns) {
     pastThreshold = isPastThreshold(currentMoney, maxMoney, thresholdPercent);
   } while (!pastThreshold);
 
-  ns.toast(`${target} grown to ${currentMoney}`, "success", 10000);
+  ns.toast(`${target} grown to ${currentMoney.toFixed(3)}`, "success", 10000);
 }
 
 const isPastThreshold = (current, max, threshold) =>

@@ -15,7 +15,11 @@ export async function main(ns) {
   const numThreads = Math.max(Math.floor(targetFreeRam / hackCost), 1);
 
   ns.toast(
-    `Target: ${target}\r\nMax RAM: ${targetMaxRam}\r\nUsed RAM: ${targetUsedRam}\r\nFree RAM: ${targetFreeRam}\r\nHack Cost: ${hackCost}\r\nnumThreads: ${numThreads}`,
+    `Target: ${target}\r\nMax RAM: ${targetMaxRam}\r\nUsed RAM: ${targetUsedRam.toFixed(
+      3
+    )}\r\nFree RAM: ${targetFreeRam.toFixed(
+      3
+    )}\r\nHack Cost: ${hackCost}\r\nnumThreads: ${numThreads}`,
     "info"
   );
 

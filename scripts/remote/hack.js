@@ -17,21 +17,33 @@ export async function main(ns) {
     const securityLevel = ns.getServerSecurityLevel(target);
     if (securityLevel > securityThreshhold) {
       ns.toast(
-        `${target} security ${securityLevel} > ${securityThreshhold}`,
+        `Weakening ${target} security ${securityLevel.toFixed(
+          3
+        )} > ${securityThreshhold.toFixed(3)}`,
         "info"
       );
 
       await ns.weaken(target);
     } else if (moneyAvailable < moneyThreshold) {
-      ns.toast(`${target} money ${moneyAvailable} < ${moneyThreshold}`, "info");
+      ns.toast(
+        `Growing ${target} money ${moneyAvailable.toFixed(
+          3
+        )} ${moneyThreshold.toFixed(3)}`,
+        "info"
+      );
 
       await ns.grow(target);
     } else {
       if (moneyAvailable >= stopThreshold) {
+        ns.toast(
+          `Hacking ${target} money ${moneyAvailable.toFixed(3)} / ${
+            moneyThreshold.toFixed
+          }`
+        );
         await ns.hack(target);
       } else {
         ns.toast(
-          `${target} drained to ${stopThreshold} or less`,
+          `${target} drained to ${stopThreshold.toFixed(3)}`,
           "success",
           10000
         );
