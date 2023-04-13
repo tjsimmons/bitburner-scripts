@@ -5,12 +5,12 @@ export async function main(ns) {
   const name = "serv-";
 
   if (numServers === undefined) {
-    ns.print("ERROR numServers must be provided");
+    ns.toast("numServers must be provided", "error", 3000);
     return;
   }
 
   if (ram === undefined) {
-    ns.print("ERROR RAM must be provided");
+    ns.toast("RAM must be provided", "error", 3000);
     return;
   }
 

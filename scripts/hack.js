@@ -23,8 +23,9 @@ export async function main(ns) {
 
   while (moneyAvailable >= stopThreshold) {
     ns.toast(
-      `${target} money available: ${moneyAvailable} / ${stopThreshold}`,
-      "info"
+      `Hacking ${target} ${moneyAvailable} / ${stopThreshold}`,
+      "info",
+      10000
     );
 
     await ns.hack(target);
@@ -32,5 +33,5 @@ export async function main(ns) {
     moneyAvailable = ns.getServerMoneyAvailable(target);
   }
 
-  ns.toast(`${target} drained to ${stopThreshold} or less`, "error");
+  ns.toast(`${target} drained to ${stopThreshold} or less`, "success", 10000);
 }

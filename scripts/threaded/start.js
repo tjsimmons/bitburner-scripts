@@ -45,7 +45,6 @@ export async function main(ns) {
 
   paths.map((file) => ns.scp(file, host));
 
-  ns.alert(`Executing ${mainPath}`);
   ns.exec(
     mainPath,
     host,

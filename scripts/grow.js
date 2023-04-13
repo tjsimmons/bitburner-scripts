@@ -9,7 +9,7 @@ export async function main(ns) {
   }
 
   if (thresholdPercent === undefined) {
-    ns.print("thresholdPercent must be passed as an argument", "error", 3000);
+    ns.toast("thresholdPercent must be passed as an argument", "error", 3000);
     return;
   }
 
@@ -18,7 +18,7 @@ export async function main(ns) {
   let pastThreshold = isPastThreshold(currentMoney, maxMoney, thresholdPercent);
 
   while (!pastThreshold) {
-    ns.toast(`${target} money: ${currentMoney} / ${maxMoney} `, "info");
+    ns.toast(`Growing ${target} ${currentMoney} / ${maxMoney}`, "info", 10000);
 
     await ns.grow(target);
 
@@ -26,7 +26,7 @@ export async function main(ns) {
     pastThreshold = isPastThreshold(currentMoney, maxMoney, thresholdPercent);
   }
 
-  ns.toast(`${target} grown to ${currentMoney}`, "success");
+  ns.toast(`${target} grown to ${currentMoney}`, "success", 10000);
 }
 
 const isPastThreshold = (current, max, threshold) =>

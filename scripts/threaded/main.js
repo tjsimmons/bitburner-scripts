@@ -1,7 +1,8 @@
 /** @param {import("../..").NS} ns */
 export async function main(ns) {
   const target = ns.args[0];
-  const growThreshold = ns.args[1];
+  const growThresholdPercent = ns.args[1];
+  const stopThresholdPercent = ns.args[2];
   const hostname = ns.getHostname();
 
   if (target === undefined) {
@@ -9,8 +10,8 @@ export async function main(ns) {
     return;
   }
 
-  if (growThreshold === undefined) {
-    ns.toast("growThreshold must be passed as an argument", "error");
+  if (growThresholdPercent === undefined) {
+    ns.toast("growThresholdPercent must be passed as an argument", "error");
     return;
   }
 
@@ -48,10 +49,13 @@ export async function main(ns) {
     ramFree -= weakenCost * weakenThreads;
 
     weakenPID = ns.run(weakenPath, weakenThreads, target);
-    ns.toast(
-      `Weaken PID ${weakenPID} with ${weakenThreads} threads`,
-      "success"
-    );
+
+    if (weakenPID > 0) {
+      ns.toast(
+        `Weaken PID ${weakenPID} with ${weakenThreads} threads`,
+        "success"
+      );
+    }
 
     await ns.sleep(5000);
 
@@ -62,9 +66,11 @@ export async function main(ns) {
       growThreads = Math.max(Math.floor(ramFree / growCost), 1);
     }
 
-    growPID = ns.run(growPath, growThreads, target, growThreshold);
-    ramFree -= growCost * growThreads;
-    ns.toast(`Grow PID ${growPID} with ${growThreads} threads`, "success");
+    growPID = ns.run(growPath, growThreads, target, growThresholdPercent);
+
+    if (growPID > 0) {
+      ns.toast(`Grow PID ${growPID} with ${growThreads} threads`, "success");
+    }
 
     await ns.sleep(5000);
 
@@ -86,8 +92,11 @@ export async function main(ns) {
 
     const hackThreads = Math.max(Math.floor(ramFree / hackCost), 1);
 
-    hackPID = ns.run(hackPath, hackThreads, target);
-    ns.toast(`Hack PID ${hackPID} with ${hackThreads} threads`, "success");
+    hackPID = ns.run(hackPath, hackThreads, target, stopThresholdPercent);
+
+    if (hackPID > 0) {
+      ns.toast(`Hack PID ${hackPID} with ${hackThreads} threads`, "success");
+    }
 
     while (hackRunning) {
       if (!ns.isRunning(hackPID)) {

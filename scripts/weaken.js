@@ -12,7 +12,11 @@ export async function main(ns) {
   let currentSecLevel = ns.getServerSecurityLevel(target);
 
   while (currentSecLevel > minSecLevel) {
-    ns.toast(`${target} security: ${currentSecLevel} / ${minSecLevel}`, "info");
+    ns.toast(
+      `Weakening ${target} security: ${currentSecLevel} / ${minSecLevel}`,
+      "info",
+      10000
+    );
 
     await ns.weaken(target);
 
@@ -22,6 +26,6 @@ export async function main(ns) {
   ns.toast(
     `${target} reached desired security level ${minSecLevel}`,
     "success",
-    5000
+    10000
   );
 }
