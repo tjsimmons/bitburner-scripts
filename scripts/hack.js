@@ -33,5 +33,5 @@ export async function main(ns) {
     moneyAvailable = ns.getServerMoneyAvailable(target);
   }
 
-  ns.toast(`${target} drained to ${stopThreshold} or less`, "success", 10000);
+  ns.toast(`${target} drained to ${stopThreshold}`, "success", 10000);
 }

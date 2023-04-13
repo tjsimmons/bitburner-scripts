@@ -5,16 +5,19 @@
 /** @param {import("../..").NS} ns */
 export async function main(ns) {
   const owned = [
-    "n00dles",
+    //"n00dles",
     "foodnstuff",
     "sigma-cosmetics",
     "joesguns",
     "hong-fang-tea",
     "harakiri-sushi",
-    "zer0",
     "nectar-net",
+    "zer0",
     "iron-gym",
     "max-hardware",
+    "neo-net",
+    /*"phantasy",
+    "silver-helix",*/
     //"csec",
   ];
 
@@ -32,13 +35,17 @@ async function runScript(ns, target) {
     ns.brutessh(target);
   }
 
+  if (ns.fileExists("FTPCrack.exe", "home")) {
+    ns.ftpcrack(target);
+  }
+
   ns.nuke(target);
 
   if (!ns.scriptRunning(hackScript, target)) {
-    ns.print(`Executing remote script on ${target}`);
+    ns.toast(`Executing remote script on ${target}`, "info");
     ns.run(mainScript, 1, target);
-    await ns.sleep(15000);
+    await ns.sleep(5000);
   } else {
-    ns.print(`Script already running on ${target}`);
+    ns.toast(`Script already running on ${target}`, "error");
   }
 }

@@ -14,14 +14,9 @@ export async function main(ns) {
   const targetFreeRam = targetMaxRam - targetUsedRam;
   const numThreads = Math.max(Math.floor(targetFreeRam / hackCost), 1);
 
-  ns.printf(
-    "Target: %s\r\nMax RAM: %f\r\nUsed RAM: %f\r\nFree RAM: %f\r\nHack Cost: %f\r\nnumThreads: %d",
-    target,
-    targetMaxRam,
-    targetUsedRam,
-    targetFreeRam,
-    hackCost,
-    numThreads
+  ns.toast(
+    `Target: ${target}\r\nMax RAM: ${targetMaxRam}\r\nUsed RAM: ${targetUsedRam}\r\nFree RAM: ${targetFreeRam}\r\nHack Cost: ${hackCost}\r\nnumThreads: ${numThreads}`,
+    "info"
   );
 
   ns.scp(hackPath, target);

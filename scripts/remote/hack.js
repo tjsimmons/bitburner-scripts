@@ -7,27 +7,34 @@ export async function main(ns) {
     return;
   }
 
-  const securityThreshhold = ns.getServerMinSecurityLevel(target) + 1;
+  const securityThreshhold = ns.getServerMinSecurityLevel(target) + 7;
   const targetMaxMoney = ns.getServerMaxMoney(target);
-  const moneyThreshold = targetMaxMoney * 0.9;
-  const stopThreshold = targetMaxMoney * 0.7;
+  const moneyThreshold = targetMaxMoney * 0.5;
+  const stopThreshold = targetMaxMoney * 0.25;
 
   while (true) {
     const moneyAvailable = ns.getServerMoneyAvailable(target);
     const securityLevel = ns.getServerSecurityLevel(target);
     if (securityLevel > securityThreshhold) {
-      ns.print(`WARN Security level ${securityLevel} > ${securityThreshhold}`);
+      ns.toast(
+        `${target} security ${securityLevel} > ${securityThreshhold}`,
+        "info"
+      );
 
       await ns.weaken(target);
     } else if (moneyAvailable < moneyThreshold) {
-      ns.print(`WARN Money available ${moneyAvailable} < ${moneyThreshold}`);
+      ns.toast(`${target} money ${moneyAvailable} < ${moneyThreshold}`, "info");
 
       await ns.grow(target);
     } else {
       if (moneyAvailable >= stopThreshold) {
         await ns.hack(target);
       } else {
-        ns.print(`SUCCESS %s drained to ${stopThreshold} or less`);
+        ns.toast(
+          `${target} drained to ${stopThreshold} or less`,
+          "success",
+          10000
+        );
       }
     }
   }

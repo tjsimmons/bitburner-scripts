@@ -2,8 +2,9 @@
 export async function main(ns) {
   const host = ns.args[0];
   const target = ns.args[1];
-  const growThreshholdPercent = ns.args[2];
-  const stopThresholdPercent = ns.args[3];
+  const minSecLevelPad = ns.args[2];
+  const growThreshholdPercent = ns.args[3];
+  const stopThresholdPercent = ns.args[4];
 
   if (host === undefined) {
     ns.toast("Host must be passed as an argument", "error", 3000);
@@ -12,6 +13,11 @@ export async function main(ns) {
 
   if (target === undefined) {
     ns.toast("Target must be passed as an argument", "error", 3000);
+    return;
+  }
+
+  if (minSecLevelPad === undefined) {
+    ns.toast("minSecLevelPad must be passed as an argument", "error", 3000);
     return;
   }
 
@@ -50,6 +56,7 @@ export async function main(ns) {
     host,
     1,
     target,
+    minSecLevelPad,
     growThreshholdPercent,
     stopThresholdPercent
   );
