@@ -5,8 +5,8 @@
 /** @param {import("../..").NS} ns */
 export async function main(ns) {
   const owned = [
-    //"n00dles",
-    "foodnstuff",
+    "n00dles",
+    /*"foodnstuff",
     "sigma-cosmetics",
     "joesguns",
     "hong-fang-tea",
@@ -15,7 +15,7 @@ export async function main(ns) {
     "zer0",
     "iron-gym",
     "max-hardware",
-    "neo-net",
+    //"neo-net",
     /*"phantasy",
     "silver-helix",*/
     //"csec",

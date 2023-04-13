@@ -36,9 +36,9 @@ export async function main(ns) {
     } else {
       if (moneyAvailable >= stopThreshold) {
         ns.toast(
-          `Hacking ${target} money ${moneyAvailable.toFixed(3)} / ${
-            moneyThreshold.toFixed
-          }`
+          `Hacking ${target} money ${moneyAvailable.toFixed(
+            3
+          )} / ${moneyThreshold.toFixed(3)}`
         );
         await ns.hack(target);
       } else {
