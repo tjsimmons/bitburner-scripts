@@ -1,19 +1,19 @@
 /** @param {import("..").NS} ns */
 export async function main(ns) {
   const target = ns.args[0];
-  const minSecLevelPad = ns.args[1];
+  const minWeakenPad = ns.args[1];
 
   if (target === undefined) {
     ns.toast("Target must be passed as an argument", "error", 3000);
     return;
   }
 
-  if (minSecLevelPad === undefined) {
-    ns.toast("minSecLevelPad must be passed as an argument", "error", 3000);
+  if (minWeakenPad === undefined) {
+    ns.toast("minWeakenPad must be passed as an argument", "error", 3000);
     return;
   }
 
-  const minSecLevel = ns.getServerMinSecurityLevel(target) + minSecLevelPad;
+  const minSecLevel = ns.getServerMinSecurityLevel(target) + minWeakenPad;
   let currentSecLevel = ns.getServerSecurityLevel(target);
 
   while (currentSecLevel > minSecLevel) {

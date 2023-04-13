@@ -1,9 +1,9 @@
 /** @param {import("../..").NS} ns */
 export async function main(ns) {
   const target = ns.args[0];
-  const minSecLevelPad = ns.args[1];
+  const minWeakenPad = ns.args[1];
   const growThresholdPercent = ns.args[2];
-  const stopThresholdPercent = ns.args[3];
+  const hackThresholdPercent = ns.args[3];
   const hostname = ns.getHostname();
 
   if (target === undefined) {
@@ -11,8 +11,8 @@ export async function main(ns) {
     return;
   }
 
-  if (minSecLevelPad === undefined) {
-    ns.toast("minSecLevelPad must be passed as an argument", "error");
+  if (minWeakenPad === undefined) {
+    ns.toast("minWeakenPad must be passed as an argument", "error");
     return;
   }
 
@@ -21,8 +21,8 @@ export async function main(ns) {
     return;
   }
 
-  if (stopThresholdPercent === undefined) {
-    ns.toast("stopThresholdPercent must be passed as an argument", "error");
+  if (hackThresholdPercent === undefined) {
+    ns.toast("hackThresholdPercent must be passed as an argument", "error");
     return;
   }
 
@@ -66,7 +66,7 @@ export async function main(ns) {
         1
       );
 
-      ns.run(weakenPath, weakenThreads, target, minSecLevelPad);
+      ns.run(weakenPath, weakenThreads, target, minWeakenPad);
       ns.toast(`${target} WEAKEN (${weakenThreads} threads)`, "success");
 
       ramFree -= weakenCost * weakenThreads;
@@ -93,7 +93,7 @@ export async function main(ns) {
 
       hackThreads = Math.max(Math.floor(ramFree / hackCost), 1);
 
-      ns.run(hackPath, hackThreads, target, stopThresholdPercent);
+      ns.run(hackPath, hackThreads, target, hackThresholdPercent);
       ns.toast(`${target} HACK (${hackThreads} threads)`, "success");
 
       do {

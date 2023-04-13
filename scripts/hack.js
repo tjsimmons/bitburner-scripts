@@ -1,16 +1,16 @@
 /** @param {import("..").NS} ns */
 export async function main(ns) {
   const target = ns.args[0];
-  const stopThresholdPercent = ns.args[1];
+  const hackThresholdPercent = ns.args[1];
 
   if (target === undefined) {
     ns.toast("Target must be passed as an argument", "error", 3000);
     return;
   }
 
-  if (stopThresholdPercent === undefined) {
+  if (hackThresholdPercent === undefined) {
     ns.toast(
-      "stopThresholdPercent must be passed as an argument",
+      "hackThresholdPercent must be passed as an argument",
       "error",
       3000
     );
@@ -18,12 +18,12 @@ export async function main(ns) {
   }
 
   let moneyAvailable = ns.getServerMoneyAvailable(target);
-  const stopThreshold =
-    ns.getServerMaxMoney(target) * (stopThresholdPercent / 100);
+  const hackThreshold =
+    ns.getServerMaxMoney(target) * (hackThresholdPercent / 100);
 
-  while (moneyAvailable >= stopThreshold) {
+  while (moneyAvailable >= hackThreshold) {
     ns.toast(
-      `Hacking ${target} ${moneyAvailable.toFixed(3)} / ${stopThreshold.toFixed(
+      `Hacking ${target} ${moneyAvailable.toFixed(3)} / ${hackThreshold.toFixed(
         3
       )}`,
       "info",
@@ -36,7 +36,7 @@ export async function main(ns) {
   }
 
   ns.toast(
-    `${target} drained to ${stopThreshold.toFixed(3)}`,
+    `${target} drained to ${hackThreshold.toFixed(3)}`,
     "success",
     10000
   );
