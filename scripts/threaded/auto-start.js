@@ -17,7 +17,7 @@ export async function main(ns) {
     "/scripts/weaken.js",
     "/scripts/grow.js",
     "/scripts/hack.js",
-    "/scripts/lib/Weight.js",
+    "/scripts/lib/Weights.js",
     mainPath,
   ];
 
