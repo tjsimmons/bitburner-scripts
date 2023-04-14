@@ -21,8 +21,6 @@ export async function main(ns) {
     mainPath,
   ];
 
-  ns.run("/scripts/util/walkAndHack.js");
-
   let hosts = AllHosts(ns).filter((host) => host.ram > 4);
 
   if (target === undefined) {
@@ -31,7 +29,7 @@ export async function main(ns) {
   }
 
   if (includeHome) {
-    hosts.push({ name: "home", ram: 8, type: HostType.Grow });
+    hosts.push({ name: "home", ram: null, type: HostType.Grow });
   }
 
   const weakenServers = hosts.filter((host) => host.type === HostType.Weaken);
@@ -56,6 +54,11 @@ export async function main(ns) {
 
     paths.map((file) => ns.scp(file, name, "home"));
   });
+
+  // start up the auto-hack and auto-share script on home
+  ns.run("/scripts/util/walkAndHack.js");
+  await ns.sleep(15000);
+  ns.run("/scripts/util/share.js", 20);
 
   for (const { name } of weakenServers) {
     await startScript(ns, name, target, weakenPad, disabled, disabled);

@@ -1,8 +1,6 @@
 import HostType from "/scripts/lib/HostType";
 import Weight from "/scripts/lib/Weights";
 
-const usableTypes = [HostType.WeakenHack, HostType.GrowHack, HostType.Hack];
-
 export async function main(ns) {
   return AllHostsAssigned(ns);
 }
@@ -11,9 +9,8 @@ export async function main(ns) {
 export const All = (ns) => {
   let servers = [];
   let walked = ["home"];
-  let types = usableTypes;
 
-  scan(ns, "home", walked, types, servers);
+  scan(ns, "home", walked, servers);
 
   return servers;
 };
@@ -44,7 +41,11 @@ const assignTypes = (ns, servers) => {
   while (assignedRam <= weakenRam && assignableServers.length > 0) {
     const nextServer = assignableServers.shift();
 
-    if (nextServer.ram + assignedRam <= weakenRam) {
+    if (
+      nextServer.ram + assignedRam <= weakenRam ||
+      assignedServers.length === 0
+    ) {
+      // always assign at least one
       nextServer.type = HostType.Weaken;
       assignedServers.push(nextServer);
       assignedRam += nextServer.ram;
@@ -55,14 +56,20 @@ const assignTypes = (ns, servers) => {
 
   ns.tprint(`${assignedRam}GB assigned to weaken`);
 
-  assignableServers = Array.from(tempArray);
+  assignableServers = Array.from(tempArray).concat(assignableServers);
   tempArray = [];
 
   assignedRam = 0;
+  ns.tprint(`Assigned servers length ${assignedServers.length}`);
+  ns.tprint(`Assignable servers length ${assignableServers.length}`);
   while (assignedRam <= hackRam && assignableServers.length > 0) {
     const nextServer = assignableServers.shift();
 
-    if (nextServer.ram + assignedRam <= hackRam) {
+    if (
+      nextServer.ram + assignedRam <= hackRam ||
+      assignedServers.length === 1
+    ) {
+      // always assign one
       nextServer.type = HostType.Hack;
       assignedServers.push(nextServer);
       assignedRam += nextServer.ram;
@@ -73,7 +80,7 @@ const assignTypes = (ns, servers) => {
 
   ns.tprint(`${assignedRam}GB assigned to hack`);
 
-  assignableServers = Array.from(tempArray);
+  assignableServers = Array.from(tempArray).concat(assignableServers);
 
   // the leftover servers get to grow, should be the majority
   assignedRam = 0;
@@ -94,7 +101,7 @@ const assignTypes = (ns, servers) => {
   return assignedServers;
 };
 
-const scan = (ns, host, walked, types, servers) => {
+const scan = (ns, host, walked, servers) => {
   for (const target of ns.scan(host).filter((h) => walked.indexOf(h) === -1)) {
     walked.push(target);
 
@@ -110,7 +117,7 @@ const scan = (ns, host, walked, types, servers) => {
       });
     }
 
-    scan(ns, target, walked, types, servers);
+    scan(ns, target, walked, servers);
   }
 };
 

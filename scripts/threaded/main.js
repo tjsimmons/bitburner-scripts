@@ -101,6 +101,9 @@ export async function main(ns) {
     );
   }*/
 
+  const targetMaxMoney = ns.getServerMaxMoney(target);
+  let targetPercent = 0;
+
   // loop here
   while (true) {
     ramFree = hostMaxRam - ns.getServerUsedRam(hostname);
@@ -129,15 +132,20 @@ export async function main(ns) {
       weakenPID = ns.run(weakenPath, weakenThreads, target, minWeakenPad);
       ns.toast(`${hostname} WEAKEN (${weakenThreads} threads)`, "success");
 
-      // wait a second, see if it's running, and if not start a grow to help out at hack stop + 5%
+      // wait a second, see if it's running, and if not start a grow to help out at current money + 10%
       await ns.sleep(1000);
 
       if (!ns.isRunning(weakenPID)) {
+        targetPercent =
+          Math.round(
+            (ns.getServerMoneyAvailable(target) / targetMaxMoney) * 100
+          ) + 10;
+
         tertiaryGrowPID = ns.run(
           growPath,
           tertiaryGrowThreads,
           target,
-          hackThresholdPercent + 5
+          targetPercent
         );
 
         ns.toast(
@@ -156,15 +164,20 @@ export async function main(ns) {
       hackPID = ns.run(hackPath, hackThreads, target, hackThresholdPercent);
       ns.toast(`${hostname} HACK (${hackThreads} threads)`, "success");
 
-      // wait a second, see if it's running, and if not start a grow to help out at hack stop + 10%
+      // wait a second, see if it's running, and if not start a grow to help out at current money + 25%
       await ns.sleep(1000);
 
       if (!ns.isRunning(hackPID)) {
+        targetPercent =
+          Math.round(
+            (ns.getServerMoneyAvailable(target) / targetMaxMoney) * 100
+          ) + 25;
+
         secondaryGrowPID = ns.run(
           growPath,
           secondaryGrowThreads,
           target,
-          hackThresholdPercent + 10
+          targetPercent
         );
 
         ns.toast(

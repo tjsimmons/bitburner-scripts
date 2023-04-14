@@ -1,8 +1,9 @@
-let walked = ["darkweb"];
+let walked = [];
 
 /** @param {import("../..").NS} ns */
 export async function main(ns) {
   const hostname = ns.getHostname();
+  walked = [];
 
   ns.toast("Beginning to walk server tree", "info");
   walkAndHack(ns, hostname);
@@ -21,6 +22,11 @@ const walkAndHack = (ns, hostname) => {
     let portsOpen = 0;
     const reqHacking = ns.getServerRequiredHackingLevel(target);
     const haveRoot = ns.hasRootAccess(target);
+    const hackLevel = ns.getHackingLevel();
+
+    ns.toast(
+      `${target} req hacking ${reqHacking} / ${hackLevel} rooted ${haveRoot}`
+    );
 
     if (ns.getHackingLevel() >= reqHacking && !haveRoot) {
       ns.toast(`Attempting to own ${target}`, "info", 5000);
