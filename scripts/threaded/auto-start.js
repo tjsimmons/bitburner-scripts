@@ -1,5 +1,5 @@
 import HostType from "/scripts/lib/HostType";
-import AllHosts from "/scripts/lib/Hosts";
+import { AllHostsAssigned as AllHosts } from "/scripts/lib/Hosts";
 
 const mainPath = "/scripts/threaded/main.js";
 const threads = 1;
@@ -17,6 +17,7 @@ export async function main(ns) {
     "/scripts/weaken.js",
     "/scripts/grow.js",
     "/scripts/hack.js",
+    "/scripts/lib/Weight.js",
     mainPath,
   ];
 
@@ -24,22 +25,13 @@ export async function main(ns) {
 
   let hosts = AllHosts(ns).filter((host) => host.ram > 4);
 
-  // TODO: add ratio arguments for weaken, grow, hack (.2, .6, .2 to start?)
-
   if (target === undefined) {
     ns.toast("Target must be passed as an argument", "error", 3000);
     return;
   }
 
-  // TODO: automate this - getting servers, finding what I own and the max RAM
-  // then calculating the threads available per script on it
-  // and run the 3 scripts at desired ratios
-  // manager script = 3.85GB
-  // weaken = 1.95
-  // grow = 1.95
-  // hack = 1.9
   if (includeHome) {
-    hosts.push({ name: "home", ram: 8, type: HostType.WeakenGrowHack });
+    hosts.push({ name: "home", ram: 8, type: HostType.Grow });
   }
 
   const weakenServers = hosts.filter((host) => host.type === HostType.Weaken);
@@ -64,8 +56,6 @@ export async function main(ns) {
 
     paths.map((file) => ns.scp(file, name, "home"));
   });
-
-  // TODO: sum up the amount of RAM for each type and display it
 
   for (const { name } of weakenServers) {
     await startScript(ns, name, target, weakenPad, disabled, disabled);
@@ -119,7 +109,6 @@ const startScript = async (
   growMaxPercent,
   hackStopPercent
 ) => {
-  ns.toast(`${host} starting main for weaken`, "info");
   ns.exec(
     mainPath,
     host,
@@ -129,5 +118,6 @@ const startScript = async (
     growMaxPercent,
     hackStopPercent
   );
+
   await ns.sleep(sleepDelay);
 };

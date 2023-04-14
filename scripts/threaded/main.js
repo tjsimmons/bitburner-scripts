@@ -1,3 +1,5 @@
+import Weight from "/scripts/lib/Weight";
+
 /*
  * The last 3 parameters, if set to -1, will disable that individual script
  */
@@ -61,25 +63,27 @@ export async function main(ns) {
   let growWeight = 0;
   let hackWeight = 0;
 
+  // at the moment, we're only using the individual functions by themselves - no combined
+  // so we're using the lib export to handle those
   if (weakenEnabled && !growEnabled && !hackEnabled) {
-    weakenWeight = 1;
+    weakenWeight = Weight.Full;
   } else if (weakenEnabled && growEnabled && !hackEnabled) {
-    weakenWeight = 0.2;
+    weakenWeight = Weight.Weaken;
     growWeight = 0.8;
   } else if (weakenEnabled && !growEnabled && hackEnabled) {
-    weakenWeight = 0.2;
+    weakenWeight = Weight.Weaken;
     hackWeight = 0.8;
   } else if (!weakenEnabled && growEnabled && !hackEnabled) {
-    growWeight = 1;
+    growWeight = Weight.Full;
   } else if (!weakenEnabled && growEnabled && hackEnabled) {
     growWeight = 0.6;
     hackWeight = 0.4;
   } else if (!weakenEnabled && !growEnabled && hackEnabled) {
-    hackWeight = 1;
+    hackWeight = Weight.Full;
   } else if (weakenEnabled && growEnabled && hackEnabled) {
-    weakenWeight = 0.2;
-    growWeight = 0.5;
-    hackWeight = 0.3;
+    weakenWeight = Weight.Weaken;
+    growWeight = Weight.Grow;
+    hackWeight = Weight.Hack;
   }
 
   /*if (weakenWeight + growWeight + hackWeight != 1) {
@@ -120,6 +124,6 @@ export async function main(ns) {
       ns.toast(`${hostname} HACK (${hackThreads} threads)`, "success");
     }
 
-    await ns.sleep(10000);
+    await ns.sleep(60000);
   }
 }

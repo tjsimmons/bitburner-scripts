@@ -1,66 +1,117 @@
 import HostType from "/scripts/lib/HostType";
+import Weight from "/scripts/lib/Weight";
+
+const usableTypes = [HostType.WeakenHack, HostType.GrowHack, HostType.Hack];
+
+export async function main(ns) {
+  return AllHostsAssigned(ns);
+}
 
 /** @param {import("../..").NS} ns */
-export const Rooted = (ns) => {
-  let rootedServers = [];
+export const All = (ns) => {
+  let servers = [];
   let walked = ["home"];
-  let types = [HostType.Weaken, HostType.Grow, HostType.Hack];
+  let types = usableTypes;
 
-  for (const target of ns
-    .scan("home")
-    .filter((host) => walked.indexOf(host) === -1)) {
+  scan(ns, "home", walked, types, servers);
+
+  return servers;
+};
+
+export const AllHostsAssigned = (ns) => assignTypes(ns, All(ns));
+
+const assignTypes = (ns, servers) => {
+  let assignableServers = Array.from(servers)
+    .sort((a, b) => a.ram - b.ram)
+    .filter(({ ram }) => ram > 4);
+  let tempArray = [];
+  let assignedServers = [];
+
+  let totalRam = servers
+    .map((server) => server.ram)
+    .reduce((previousRam, ram) => previousRam + ram);
+
+  const weakenRam = totalRam * Weight.Weaken;
+  const growRam = totalRam * Weight.Grow;
+  const hackRam = totalRam * Weight.Hack;
+
+  ns.tprint(`Total RAM ${totalRam}GB`);
+  ns.tprint(`Weaken RAM ${weakenRam}GB`);
+  ns.tprint(`Hack RAM ${hackRam}GB`);
+  ns.tprint(`Grow RAM ${growRam}GB`);
+
+  let assignedRam = 0;
+  while (assignedRam <= weakenRam && assignableServers.length > 0) {
+    const nextServer = assignableServers.shift();
+
+    if (nextServer.ram + assignedRam <= weakenRam) {
+      nextServer.type = HostType.Weaken;
+      assignedServers.push(nextServer);
+      assignedRam += nextServer.ram;
+    } else {
+      tempArray.push(nextServer);
+    }
+  }
+
+  ns.tprint(`${assignedRam}GB assigned to weaken`);
+
+  assignableServers = Array.from(tempArray);
+  tempArray = [];
+
+  assignedRam = 0;
+  while (assignedRam <= hackRam && assignableServers.length > 0) {
+    const nextServer = assignableServers.shift();
+
+    if (nextServer.ram + assignedRam <= hackRam) {
+      nextServer.type = HostType.Hack;
+      assignedServers.push(nextServer);
+      assignedRam += nextServer.ram;
+    } else {
+      tempArray.push(nextServer);
+    }
+  }
+
+  ns.tprint(`${assignedRam}GB assigned to hack`);
+
+  assignableServers = Array.from(tempArray);
+
+  // the leftover servers get to grow, should be the majority
+  assignedRam = 0;
+  while (assignableServers.length > 0) {
+    const nextServer = assignableServers.shift();
+
+    nextServer.type = HostType.Grow;
+    assignedServers.push(nextServer);
+    assignedRam += nextServer.ram;
+  }
+
+  ns.tprint(`${assignedRam}GB assigned to grow`);
+
+  assignedServers.map(({ name, ram, type }) =>
+    ns.tprint(`${name} - ${ram}GB - ${type}`)
+  );
+
+  return assignedServers;
+};
+
+const scan = (ns, host, walked, types, servers) => {
+  for (const target of ns.scan(host).filter((h) => walked.indexOf(h) === -1)) {
     walked.push(target);
 
     const haveRoot = ns.hasRootAccess(target);
 
     if (haveRoot) {
-      const currentType = types.shift();
-
       const maxRam = ns.getServerMaxRam(target);
 
-      ns.tprint(`${target} - ${currentType}`);
-
-      rootedServers.push({
+      servers.push({
         name: target,
         ram: maxRam,
-        type: currentType,
+        type: null,
       });
-
-      types.push(currentType);
     }
+
+    scan(ns, target, walked, types, servers);
   }
-
-  return rootedServers;
 };
-
-/** @param {import("../..").NS} ns */
-export const Personal = (ns) => {
-  let servers = [];
-  let types = [HostType.Weaken, HostType.Grow, HostType.Hack];
-
-  for (const server of ns.getPurchasedServers()) {
-    const maxRam = ns.getServerMaxRam(server);
-    const currentType = types.shift();
-
-    ns.tprint(`${server} - ${currentType}`);
-
-    servers.push({ name: server, ram: maxRam, type: currentType });
-
-    types.push(currentType);
-  }
-
-  return servers;
-};
-[
-  /*{ name: "serv-0", ram: 32768, type: HostType.WeakenGrowHack },
-  { name: "serv-1", ram: 32768, type: HostType.WeakenGrowHack },
-  { name: "serv-2", ram: 8192, type: HostType.WeakenGrowHack },
-  { name: "serv-3", ram: 1024, type: HostType.WeakenGrowHack },
-  { name: "serv-4", ram: 1024, type: HostType.WeakenGrowHack },
-  { name: "serv-5", ram: 1024, type: HostType.WeakenGrowHack },
-  { name: "serv-6", ram: 1024, type: HostType.WeakenGrowHack },*/
-];
-
-export const All = (ns) => Rooted(ns).concat(Personal(ns));
 
 export default All;

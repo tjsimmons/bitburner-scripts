@@ -1,4 +1,4 @@
-let walked = [];
+let walked = ["darkweb"];
 
 /** @param {import("../..").NS} ns */
 export async function main(ns) {
@@ -9,7 +9,7 @@ export async function main(ns) {
 
 /** @param {import("../..").NS} ns */
 const walkAndHack = (ns, hostname) => {
-  ns.toast(`Walking from ${hostname}`);
+  ns.print(`Walking from ${hostname}`);
 
   walked.push(hostname);
 
@@ -21,7 +21,7 @@ const walkAndHack = (ns, hostname) => {
     const haveRoot = ns.hasRootAccess(target);
 
     if (ns.getHackingLevel() >= reqHacking && !haveRoot) {
-      ns.toast(`Attempting to own ${target}`, "info");
+      ns.toast(`Attempting to own ${target}`, "info", 5000);
 
       if (ns.fileExists("BruteSSH.exe", "home")) {
         ns.brutessh(target);
@@ -33,9 +33,26 @@ const walkAndHack = (ns, hostname) => {
         portsOpen++;
       }
 
+      if (ns.fileExists("relaySMTP.exe", "home")) {
+        ns.relaysmtp(target);
+        portsOpen++;
+      }
+
+      if (ns.fileExists("HTTPWorm.exe", "home")) {
+        ns.httpworm(target);
+        portsOpen++;
+      }
+
+      if (ns.fileExists("SQLInject.exe", "home")) {
+        ns.sqlinject(target);
+        portsOpen++;
+      }
+
       if (portsOpen >= ns.getServerNumPortsRequired(target)) {
         ns.toast(`Nuking ${target}`, "success", 5000);
         ns.nuke(target);
+      } else {
+        ns.toast(`Not enough open ports ${target}`, "error", 5000);
       }
     }
 

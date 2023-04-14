@@ -1,13 +1,7 @@
 /** @param {import("../..").NS} ns */
 export async function main(ns) {
-  const numServers = ns.args[0];
-  const name = ns.args[1];
-  const ram = ns.args[2];
-
-  if (numServers === undefined) {
-    ns.toast("numServers must be provided", "error", 3000);
-    return;
-  }
+  const name = ns.args[0];
+  const ram = ns.args[1];
 
   if (ram === undefined) {
     ns.toast("RAM must be provided", "error", 3000);
