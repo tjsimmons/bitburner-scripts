@@ -1,4 +1,4 @@
-import Weight from "/scripts/lib/Weights.js";
+import Weight from "/scripts/lib/Weights";
 
 /*
  * The last 3 parameters, if set to -1, will disable that individual script

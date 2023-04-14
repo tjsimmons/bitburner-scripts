@@ -1,5 +1,5 @@
-import HostType from "/scripts/lib/HostType.js";
-import { AllHostsAssigned as AllHosts } from "/scripts/lib/Hosts.js";
+import HostType from "/scripts/lib/HostType";
+import { AllHostsAssigned as AllHosts } from "/scripts/lib/Hosts";
 
 const mainPath = "/scripts/threaded/main.js";
 const threads = 1;

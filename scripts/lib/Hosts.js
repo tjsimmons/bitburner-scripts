@@ -1,5 +1,5 @@
-import HostType from "/scripts/lib/HostType.js";
-import Weight from "/scripts/lib/Weights.js";
+import HostType from "/scripts/lib/HostType";
+import Weight from "/scripts/lib/Weights";
 
 const usableTypes = [HostType.WeakenHack, HostType.GrowHack, HostType.Hack];
 
