@@ -44,6 +44,9 @@ export async function main(ns) {
   let weakenPID = 0;
   let weakenThreads = 1;
   let weakenRunning = false;
+  let tertiaryGrowRunning = false;
+  let tertiaryGrowPID = 0;
+  let tertiaryGrowThreads = 1;
 
   const growEnabled = growThresholdPercent > -1;
   const growPath = "/scripts/grow.js";
@@ -58,6 +61,9 @@ export async function main(ns) {
   let hackPID = 0;
   let hackThreads = 1;
   let hackRunning = false;
+  let secondaryGrowRunning = false;
+  let secondaryGrowPID = 0;
+  let secondaryGrowThreads = 1;
 
   let weakenWeight = 0;
   let growWeight = 0;
@@ -101,6 +107,8 @@ export async function main(ns) {
     weakenRunning = ns.isRunning(weakenPID, hostname);
     growRunning = ns.isRunning(growPID, hostname);
     hackRunning = ns.isRunning(hackPID, hostname);
+    secondaryGrowRunning = ns.isRunning(secondaryGrowPID, hostname);
+    tertiaryGrowRunning = ns.isRunning(tertiaryGrowPID, hostname);
 
     weakenThreads = Math.max(
       Math.floor((ramFree * weakenWeight) / weakenCost),
@@ -108,10 +116,35 @@ export async function main(ns) {
     );
     growThreads = Math.max(Math.floor((ramFree * growWeight) / growCost), 1);
     hackThreads = Math.max(Math.floor((ramFree * hackWeight) / hackCost), 1);
+    secondaryGrowThreads = Math.max(
+      Math.floor((ramFree * hackWeight) / growCost),
+      1
+    );
+    tertiaryGrowThreads = Math.max(
+      Math.floor((ramFree * weakenWeight) / growCost),
+      1
+    );
 
-    if (weakenEnabled && !weakenRunning) {
+    if (weakenEnabled && !weakenRunning && !tertiaryGrowRunning) {
       weakenPID = ns.run(weakenPath, weakenThreads, target, minWeakenPad);
       ns.toast(`${hostname} WEAKEN (${weakenThreads} threads)`, "success");
+
+      // wait a second, see if it's running, and if not start a grow to help out at hack stop + 5%
+      await ns.sleep(1000);
+
+      if (!ns.isRunning(weakenPID)) {
+        tertiaryGrowPID = ns.run(
+          growPath,
+          tertiaryGrowThreads,
+          target,
+          hackThresholdPercent + 5
+        );
+
+        ns.toast(
+          `${hostname} TERTIARY GROW (${tertiaryGrowThreads} threads)`,
+          "success"
+        );
+      }
     }
 
     if (growEnabled && !growRunning) {
@@ -119,9 +152,26 @@ export async function main(ns) {
       ns.toast(`${hostname} GROW (${growThreads} threads)`, "success");
     }
 
-    if (hackEnabled && !hackRunning) {
+    if (hackEnabled && !hackRunning && !secondaryGrowRunning) {
       hackPID = ns.run(hackPath, hackThreads, target, hackThresholdPercent);
       ns.toast(`${hostname} HACK (${hackThreads} threads)`, "success");
+
+      // wait a second, see if it's running, and if not start a grow to help out at hack stop + 10%
+      await ns.sleep(1000);
+
+      if (!ns.isRunning(hackPID)) {
+        secondaryGrowPID = ns.run(
+          growPath,
+          secondaryGrowThreads,
+          target,
+          hackThresholdPercent + 10
+        );
+
+        ns.toast(
+          `${hostname} SECONDARY GROW (${secondaryGrowThreads} threads)`,
+          "success"
+        );
+      }
     }
 
     await ns.sleep(60000);
