@@ -1,13 +1,16 @@
 /** @param {import("../..").NS} ns */
 export async function main(ns) {
   const target = ns.args[0];
+  let ram = ns.args[1];
 
   if (target === undefined) {
     ns.toast("Target must be passed as an argument", "error", 5000);
     return;
   }
 
-  const ram = ns.getServerMaxRam(target) * 2;
+  if (ram === undefined) {
+    ram = ns.getServerMaxRam(target) * 2;
+  }
 
   if (ns.upgradePurchasedServer(target, ram)) {
     ns.toast(`Upgraded ${target} to ${ram}GB`, "success", 5000);

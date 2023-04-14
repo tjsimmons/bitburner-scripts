@@ -1,3 +1,6 @@
+import HostType from "/scripts/lib/HostType";
+import AllHosts from "/scripts/lib/Hosts";
+
 const mainPath = "/scripts/threaded/main.js";
 const threads = 1;
 const sleepDelay = 500;
@@ -27,100 +30,99 @@ export async function main(ns) {
   // weaken = 1.95
   // grow = 1.95
   // hack = 1.9
-  const rooted = [
-    "foodnstuff", // 16gb (12.15 usable)
-    "sigma-cosmetics", // 16gb (12.15 usable)
-    "joesguns", // 16gb (12.15 usable)
-    "hong-fang-tea", // 16gb (12.15 usable)
-    "harakiri-sushi", // 16gb (12.15 usable)
-    "nectar-net", // 16gb (12.15 usable)
-    // 72.9
-    "zer0", // 32gb (28.15 usable)
-    "iron-gym", // 32gb (28.15 usable)
-    "max-hardware", // 32gb (28.15 usable)
-    "neo-net", // 32gb (28.15 usable)
-    "phantasy", // 32gb (28.15 usable)
-    "omega-net", // 32gb (28.15 usable)
-    // 168.9
-    "silver-helix", // 64gb (60.15 usable)
-    // 60.15,
-    "avmnite-02h", // 128gb (124.15 usable)
-    // 124.15
-  ];
 
-  const owned = [
-    "serv-0", // 64gb (60.15 usable)
-    "serv-1", // 16gb (12.15 usable)
-    "serv-2", // 16gb (12.15 usable)
-  ];
-
-  const usable = rooted.concat(owned);
-
-  // total: 510.55
-  // foodnstuff, sigma, serv-1 = weaken (18 threads / 9%)
-  // silver, serv-2 = hack (38 threads / 19%)
-  // the rest = grow (142 threads / 72%)
-
-  const weakenServers = ["foodnstuff", "sigma-cosmetics", "serv-0"];
-  const hackServers = ["silver-helix", "serv-1"];
-  const weakenGrowServers = ["avmnite-02h"];
-  const growServers = usable
-    .filter((u) => weakenServers.indexOf(u) === -1)
-    .filter((u) => hackServers.indexOf(u) === -1)
-    .filter((u) => weakenGrowServers.indexOf(u) === -1);
+  const weakenServers = AllHosts.filter(
+    (host) => host.type === HostType.Weaken
+  );
+  const growServers = AllHosts.filter((host) => host.type === HostType.Grow);
+  const hackServers = AllHosts.filter((host) => host.type === HostType.Hack);
+  const weakenGrowServers = AllHosts.filter(
+    (host) => host.type === HostType.WeakenGrow
+  );
+  const weakenHackServers = AllHosts.filter(
+    (host) => host.type === HostType.WeakenHack
+  );
+  const growHackServers = AllHosts.filter(
+    (host) => host.type === HostType.GrowHack
+  );
+  const weakenGrowHackServers = AllHosts.filter(
+    (host) => host.type === HostType.WeakenGrowHack
+  );
 
   const weakenPad = 0;
   const growMaxPercent = 100;
   const hackStopPercent = 25;
 
   // prepare the servers
-  usable.map((u) => {
-    ns.killall(u);
+  AllHosts.map(({ name }) => {
+    ns.killall(name);
 
-    paths.map((file) => ns.scp(file, u, "home"));
+    paths.map((file) => ns.scp(file, name, "home"));
   });
 
-  for (const host of weakenServers) {
-    await startWeaken(ns, host, target, weakenPad);
+  // TODO: sum up the amount of RAM for each type and display it
+
+  for (const { name } of weakenServers) {
+    await startScript(ns, name, target, weakenPad, disabled, disabled);
   }
 
-  for (const host of growServers) {
-    await startGrow(ns, host, target, growMaxPercent);
+  for (const { name } of growServers) {
+    await startScript(ns, name, target, disabled, growMaxPercent, disabled);
   }
 
-  for (const host of hackServers) {
-    await startHack(ns, host, target, hackStopPercent);
+  for (const { name } of hackServers) {
+    await startScript(ns, name, target, disabled, disabled, hackStopPercent);
   }
 
-  for (const host of weakenGrowServers) {
-    await startWeakenGrow(ns, host, target, weakenPad, growMaxPercent);
+  for (const { name } of weakenGrowServers) {
+    await startScript(ns, name, target, weakenPad, growMaxPercent, disabled);
+  }
+
+  for (const { name } of weakenHackServers) {
+    await startScript(ns, name, target, weakenPad, disabled, hackStopPercent);
+  }
+
+  for (const { name } of growHackServers) {
+    await startScript(
+      ns,
+      name,
+      target,
+      disabled,
+      growMaxPercent,
+      hackStopPercent
+    );
+  }
+
+  for (const { name } of weakenGrowHackServers) {
+    await startScript(
+      ns,
+      name,
+      target,
+      weakenPad,
+      growMaxPercent,
+      hackStopPercent
+    );
   }
 }
 
 /** @param {import("../..").NS} ns */
-const startWeaken = async (ns, host, target, weakenPad) => {
+const startScript = async (
+  ns,
+  host,
+  target,
+  weakenPad,
+  growMaxPercent,
+  hackStopPercent
+) => {
   ns.toast(`${host} starting main for weaken`, "info");
-  ns.exec(mainPath, host, threads, target, weakenPad, disabled, disabled);
-  await ns.sleep(sleepDelay);
-};
-
-/** @param {import("../..").NS} ns */
-const startGrow = async (ns, host, target, growMaxPercent) => {
-  ns.toast(`${host} starting main for grow`, "info");
-  ns.exec(mainPath, host, threads, target, disabled, growMaxPercent, disabled);
-  await ns.sleep(sleepDelay);
-};
-
-/** @param {import("../..").NS} ns */
-const startHack = async (ns, host, target, hackStopPercent) => {
-  ns.toast(`${host} starting main for hack`, "info");
-  ns.exec(mainPath, host, threads, target, disabled, disabled, hackStopPercent);
-  await ns.sleep(sleepDelay);
-};
-
-/** @param {import("../..").NS} ns */
-const startWeakenGrow = async (ns, host, target, weakenPad, growMaxPercent) => {
-  ns.toast(`${host} starting main for weaken/grow`, "info");
-  ns.exec(mainPath, host, threads, target, weakenPad, growMaxPercent, disabled);
+  ns.exec(
+    mainPath,
+    host,
+    threads,
+    target,
+    weakenPad,
+    growMaxPercent,
+    hackStopPercent
+  );
   await ns.sleep(sleepDelay);
 };

@@ -39,77 +39,87 @@ export async function main(ns) {
   const weakenEnabled = minWeakenPad > -1;
   const weakenPath = "/scripts/weaken.js";
   const weakenCost = ns.getScriptRam(weakenPath);
+  let weakenPID = 0;
   let weakenThreads = 1;
   let weakenRunning = false;
 
   const growEnabled = growThresholdPercent > -1;
   const growPath = "/scripts/grow.js";
   const growCost = ns.getScriptRam(growPath);
+  let growPID = 0;
   let growThreads = 1;
   let growRunning = false;
 
   const hackEnabled = hackThresholdPercent > -1;
   const hackPath = "/scripts/hack.js";
   const hackCost = ns.getScriptRam(hackPath);
+  let hackPID = 0;
   let hackThreads = 1;
-  let hackCanRun = false;
-  let hackRunning = ns.scriptRunning(hackPath, hostname);
+  let hackRunning = false;
 
-  const weakenWeight = growEnabled ? 0.2 : 1;
+  let weakenWeight = 0;
+  let growWeight = 0;
+  let hackWeight = 0;
+
+  if (weakenEnabled && !growEnabled && !hackEnabled) {
+    weakenWeight = 1;
+  } else if (weakenEnabled && growEnabled && !hackEnabled) {
+    weakenWeight = 0.2;
+    growWeight = 0.8;
+  } else if (weakenEnabled && !growEnabled && hackEnabled) {
+    weakenWeight = 0.2;
+    hackWeight = 0.8;
+  } else if (!weakenEnabled && growEnabled && !hackEnabled) {
+    growWeight = 1;
+  } else if (!weakenEnabled && growEnabled && hackEnabled) {
+    growWeight = 0.6;
+    hackWeight = 0.4;
+  } else if (!weakenEnabled && !growEnabled && hackEnabled) {
+    hackWeight = 1;
+  } else if (weakenEnabled && growEnabled && hackEnabled) {
+    weakenWeight = 0.2;
+    growWeight = 0.5;
+    hackWeight = 0.3;
+  }
+
+  /*if (weakenWeight + growWeight + hackWeight != 1) {
+    ns.alert(
+      `Weights are incorrect in threaded/main.js for weaken/grow/hack ${weakenWeight}/${growWeight}/${hackWeight}\r\n
+       Weaken Enabled: ${weakenEnabled}\r\n
+       Grow Enabled: ${growEnabled}\r\n
+       Hack Enabled: ${hackEnabled}`
+    );
+  }*/
 
   // loop here
   while (true) {
     ramFree = hostMaxRam - ns.getServerUsedRam(hostname);
-    weakenRunning = ns.scriptRunning(weakenPath, hostname);
-    growRunning = ns.scriptRunning(growPath, hostname);
-    hackRunning = ns.scriptRunning(hackPath, hostname);
-    hackCanRun = !weakenRunning && !growRunning && !hackRunning;
+    weakenRunning = ns.isRunning(weakenPID, hostname);
+    growRunning = ns.isRunning(growPID, hostname);
+    hackRunning = ns.isRunning(hackPID, hostname);
+
+    weakenThreads = Math.max(
+      Math.floor((ramFree * weakenWeight) / weakenCost),
+      1
+    );
+    growThreads = Math.max(Math.floor((ramFree * growWeight) / growCost), 1);
+    hackThreads = Math.max(Math.floor((ramFree * hackWeight) / hackCost), 1);
 
     if (weakenEnabled && !weakenRunning) {
-      weakenThreads = Math.max(
-        Math.floor((ramFree * weakenWeight) / weakenCost),
-        1
-      );
-
-      ns.run(weakenPath, weakenThreads, target, minWeakenPad);
+      weakenPID = ns.run(weakenPath, weakenThreads, target, minWeakenPad);
       ns.toast(`${target} WEAKEN (${weakenThreads} threads)`, "success");
-
-      ramFree -= weakenCost * weakenThreads;
     }
 
     if (growEnabled && !growRunning) {
-      growThreads = Math.max(Math.floor(ramFree / growCost), 1);
-
-      ns.run(growPath, growThreads, target, growThresholdPercent);
+      growPID = ns.run(growPath, growThreads, target, growThresholdPercent);
       ns.toast(`${target} GROW (${growThreads} threads)`, "success");
     }
 
-    if (hackEnabled) {
-      do {
-        weakenRunning = ns.scriptRunning(weakenPath, hostname);
-        growRunning = ns.scriptRunning(growPath, hostname);
-
-        hackCanRun = !weakenRunning && !growRunning;
-
-        await ns.sleep(1000);
-      } while (!hackCanRun);
-
-      if (!hackRunning && hackCanRun) {
-        ramFree = hostMaxRam - ns.getServerUsedRam(hostname);
-
-        hackThreads = Math.max(Math.floor(ramFree / hackCost), 1);
-
-        ns.run(hackPath, hackThreads, target, hackThresholdPercent);
-        ns.toast(`${target} HACK (${hackThreads} threads)`, "success");
-
-        do {
-          hackRunning = ns.scriptRunning(hackPath, hostname);
-
-          await ns.sleep(1000);
-        } while (hackRunning);
-      }
+    if (hackEnabled && !hackRunning) {
+      hackPID = ns.run(hackPath, hackThreads, target, hackThresholdPercent);
+      ns.toast(`${target} HACK (${hackThreads} threads)`, "success");
     }
 
-    await ns.sleep(60000);
+    await ns.sleep(10000);
   }
 }
