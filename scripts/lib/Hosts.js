@@ -1,3 +1,5 @@
+import HostType from "/scripts/lib/HostType";
+
 export const Rooted = [
   { name: "foodnstuff", ram: 16, type: HostType.Hack },
   { name: "sigma-cosmetics", ram: 16, type: HostType.Hack },
