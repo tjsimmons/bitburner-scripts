@@ -2,6 +2,7 @@
 export async function main(ns) {
   const target = ns.args[0];
   const hackThresholdPercent = ns.args[1];
+  const hostname = ns.getHostname();
 
   if (target === undefined) {
     ns.toast("Target must be passed as an argument", "error", 3000);
@@ -23,12 +24,10 @@ export async function main(ns) {
   let hackDidRun = false;
 
   while (moneyAvailable >= hackThreshold) {
-    ns.toast(
+    ns.tprint(
       `Hacking ${target} ${moneyAvailable.toFixed(3)} / ${hackThreshold.toFixed(
         3
-      )}`,
-      "info",
-      10000
+      )}`
     );
 
     await ns.hack(target);
@@ -45,6 +44,14 @@ export async function main(ns) {
       `${target} drained to ${hackThreshold.toFixed(3)}`,
       "success",
       10000
+    );
+  } else {
+    ns.toast(
+      `${hostname} did not run hack against ${target} ${moneyAvailable.toFixed(
+        3
+      )} / ${hackThreshold.toFixed(3)}`,
+      "error",
+      5000
     );
   }
 }

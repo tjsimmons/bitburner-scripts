@@ -9,12 +9,20 @@ const disabled = -1;
 /** @param {import("../..").NS} ns */
 export async function main(ns) {
   const target = ns.args[0];
+  const includeHome = ns.args[1] !== undefined ? ns.args[1] : false;
+  const weakenPad = ns.args[2] !== undefined ? ns.args[2] : 0;
+  const growMaxPercent = ns.args[3] !== undefined ? ns.args[3] : 100;
+  const hackStopPercent = ns.args[4] !== undefined ? ns.args[4] : 25;
   const paths = [
     "/scripts/weaken.js",
     "/scripts/grow.js",
     "/scripts/hack.js",
     mainPath,
   ];
+
+  ns.run("/scripts/util/walkAndHack.js");
+
+  let hosts = AllHosts(ns).filter((host) => host.ram > 4);
 
   // TODO: add ratio arguments for weaken, grow, hack (.2, .6, .2 to start?)
 
@@ -30,31 +38,28 @@ export async function main(ns) {
   // weaken = 1.95
   // grow = 1.95
   // hack = 1.9
+  if (includeHome) {
+    hosts.push({ name: "home", ram: 8, type: HostType.WeakenGrowHack });
+  }
 
-  const weakenServers = AllHosts.filter(
-    (host) => host.type === HostType.Weaken
-  );
-  const growServers = AllHosts.filter((host) => host.type === HostType.Grow);
-  const hackServers = AllHosts.filter((host) => host.type === HostType.Hack);
-  const weakenGrowServers = AllHosts.filter(
+  const weakenServers = hosts.filter((host) => host.type === HostType.Weaken);
+  const growServers = hosts.filter((host) => host.type === HostType.Grow);
+  const hackServers = hosts.filter((host) => host.type === HostType.Hack);
+  const weakenGrowServers = hosts.filter(
     (host) => host.type === HostType.WeakenGrow
   );
-  const weakenHackServers = AllHosts.filter(
+  const weakenHackServers = hosts.filter(
     (host) => host.type === HostType.WeakenHack
   );
-  const growHackServers = AllHosts.filter(
+  const growHackServers = hosts.filter(
     (host) => host.type === HostType.GrowHack
   );
-  const weakenGrowHackServers = AllHosts.filter(
+  const weakenGrowHackServers = hosts.filter(
     (host) => host.type === HostType.WeakenGrowHack
   );
 
-  const weakenPad = 0;
-  const growMaxPercent = 100;
-  const hackStopPercent = 25;
-
   // prepare the servers
-  AllHosts.map(({ name }) => {
+  hosts.map(({ name }) => {
     ns.killall(name);
 
     paths.map((file) => ns.scp(file, name, "home"));

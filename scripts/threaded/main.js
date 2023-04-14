@@ -107,17 +107,17 @@ export async function main(ns) {
 
     if (weakenEnabled && !weakenRunning) {
       weakenPID = ns.run(weakenPath, weakenThreads, target, minWeakenPad);
-      ns.toast(`${target} WEAKEN (${weakenThreads} threads)`, "success");
+      ns.toast(`${hostname} WEAKEN (${weakenThreads} threads)`, "success");
     }
 
     if (growEnabled && !growRunning) {
       growPID = ns.run(growPath, growThreads, target, growThresholdPercent);
-      ns.toast(`${target} GROW (${growThreads} threads)`, "success");
+      ns.toast(`${hostname} GROW (${growThreads} threads)`, "success");
     }
 
     if (hackEnabled && !hackRunning) {
       hackPID = ns.run(hackPath, hackThreads, target, hackThresholdPercent);
-      ns.toast(`${target} HACK (${hackThreads} threads)`, "success");
+      ns.toast(`${hostname} HACK (${hackThreads} threads)`, "success");
     }
 
     await ns.sleep(10000);

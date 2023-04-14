@@ -2,6 +2,7 @@
 export async function main(ns) {
   const target = ns.args[0];
   const thresholdPercent = ns.args[1];
+  const hostname = ns.getHostname();
 
   if (target === undefined) {
     ns.toast("Target must be passed as an argument", "error", 3000);
@@ -19,13 +20,11 @@ export async function main(ns) {
   let growDidRun = false;
 
   do {
-    ns.toast(
+    ns.tprint(
       `Growing ${target} ${currentMoney.toFixed(3)} / ${(
         maxMoney *
         (thresholdPercent / 100)
-      ).toFixed(3)}`,
-      "info",
-      10000
+      ).toFixed(3)}`
     );
 
     await ns.grow(target);
@@ -40,6 +39,14 @@ export async function main(ns) {
 
   if (growDidRun) {
     ns.toast(`${target} grown to ${currentMoney.toFixed(3)}`, "success", 10000);
+  } else {
+    ns.toast(
+      `${hostname} did not run grow against ${target} ${currentMoney.toFixed(
+        3
+      )} / ${(maxMoney * (thresholdPercent / 100)).toFixed(3)}`,
+      "error",
+      5000
+    );
   }
 }
 
