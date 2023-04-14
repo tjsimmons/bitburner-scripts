@@ -38,22 +38,33 @@ function get_all_servers(ns, all = false) {
   return result;
 }
 
+/** @param {import("../..").NS} ns */
 function get_action(ns, host) {
   /*
-	Gets the first action in the list and returns it.
+	Gets the first or second action in the list and returns it.
 	*/
   var actions = ns.ps(host);
+  let actionIndex = 0;
+
   if (actions.length == 0) {
     return null;
   }
-  return actions[0].filename.replace("/scripts/", "").replace(".js", "");
+
+  let fileName = actions[actionIndex].filename;
+
+  if (fileName.indexOf("main.js") !== -1) {
+    actionIndex = 1;
+    fileName = actions[actionIndex].filename;
+  }
+
+  return fileName.slice(fileName.lastIndexOf("/") + 1);
 }
 
 function pad_str(string, len) {
   /*
 	Prepends the requested padding to the string.
 	*/
-  var pad = "                      ";
+  var pad = "                      "; // originally 22 spaces
   return String(pad + string).slice(-len);
 }
 
@@ -81,8 +92,8 @@ function get_server_data(ns, server) {
       2
     )})` +
     ` RAM:${pad_str(parseInt(ram), 4)}` +
-    ` Action:${pad_str(get_action(ns, server), 7)}` +
-    ` Skill:${pad_str(skill_required)}`
+    ` Action:${pad_str(get_action(ns, server), 12)}` +
+    ` Skill:${pad_str(skill_required, 6)}`
   );
 }
 
