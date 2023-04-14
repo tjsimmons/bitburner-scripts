@@ -35,9 +35,6 @@ export async function main(ns) {
     return;
   }
 
-  const hostMaxRam = ns.getServerMaxRam(hostname);
-  let ramFree = hostMaxRam - ns.getServerUsedRam(hostname);
-
   const weakenEnabled = minWeakenPad > -1;
   const weakenPath = "/scripts/weaken.js";
   const weakenCost = ns.getScriptRam(weakenPath);
@@ -106,6 +103,8 @@ export async function main(ns) {
 
   // loop here
   while (true) {
+    const hostMaxRam = ns.getServerMaxRam(hostname);
+    let ramFree = hostMaxRam - ns.getServerUsedRam(hostname);
     ramFree = hostMaxRam - ns.getServerUsedRam(hostname);
     weakenRunning = ns.isRunning(weakenPID, hostname);
     growRunning = ns.isRunning(growPID, hostname);
@@ -113,10 +112,6 @@ export async function main(ns) {
     secondaryGrowRunning = ns.isRunning(secondaryGrowPID, hostname);
     tertiaryGrowRunning = ns.isRunning(tertiaryGrowPID, hostname);
 
-    weakenThreads = Math.max(
-      Math.floor((ramFree * weakenWeight) / weakenCost),
-      1
-    );
     growThreads = Math.max(Math.floor((ramFree * growWeight) / growCost), 1);
     hackThreads = Math.max(Math.floor((ramFree * hackWeight) / hackCost), 1);
     secondaryGrowThreads = Math.max(
@@ -129,6 +124,11 @@ export async function main(ns) {
     );
 
     if (weakenEnabled && !weakenRunning && !tertiaryGrowRunning) {
+      weakenThreads = Math.max(
+        Math.floor((ramFree * weakenWeight) / weakenCost),
+        1
+      );
+
       weakenPID = ns.run(weakenPath, weakenThreads, target, minWeakenPad);
       ns.toast(`${hostname} WEAKEN (${weakenThreads} threads)`, "success");
 
@@ -187,6 +187,6 @@ export async function main(ns) {
       }
     }
 
-    await ns.sleep(60000);
+    await ns.sleep(3000);
   }
 }

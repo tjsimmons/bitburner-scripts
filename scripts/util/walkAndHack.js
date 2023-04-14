@@ -3,7 +3,7 @@ let walked = [];
 /** @param {import("../..").NS} ns */
 export async function main(ns) {
   const hostname = ns.getHostname();
-  walked = [];
+  walked = ["darkweb"];
 
   ns.toast("Beginning to walk server tree", "info");
   walkAndHack(ns, hostname);
@@ -12,7 +12,7 @@ export async function main(ns) {
 
 /** @param {import("../..").NS} ns */
 const walkAndHack = (ns, hostname) => {
-  ns.print(`Walking from ${hostname}`);
+  //  ns.tprint(`Walking from ${hostname}`);
 
   walked.push(hostname);
 
@@ -24,11 +24,11 @@ const walkAndHack = (ns, hostname) => {
     const haveRoot = ns.hasRootAccess(target);
     const hackLevel = ns.getHackingLevel();
 
-    ns.toast(
+    /*ns.tprint(
       `${target} req hacking ${reqHacking} / ${hackLevel} rooted ${haveRoot}`
-    );
+    );*/
 
-    if (ns.getHackingLevel() >= reqHacking && !haveRoot) {
+    if (hackLevel >= reqHacking && !haveRoot) {
       ns.toast(`Attempting to own ${target}`, "info", 5000);
 
       if (ns.fileExists("BruteSSH.exe", "home")) {

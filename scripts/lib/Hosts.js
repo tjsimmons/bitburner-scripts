@@ -33,9 +33,9 @@ const assignTypes = (ns, servers) => {
   const hackRam = totalRam * Weight.Hack;
 
   ns.tprint(`Total RAM ${totalRam}GB`);
-  ns.tprint(`Weaken RAM ${weakenRam}GB`);
-  ns.tprint(`Hack RAM ${hackRam}GB`);
-  ns.tprint(`Grow RAM ${growRam}GB`);
+  ns.tprint(`Weaken RAM ${weakenRam.toFixed(3)}GB`);
+  ns.tprint(`Hack RAM ${hackRam.toFixed(3)}GB`);
+  ns.tprint(`Grow RAM ${growRam.toFixed(3)}GB`);
 
   let assignedRam = 0;
   while (assignedRam <= weakenRam && assignableServers.length > 0) {
@@ -54,31 +54,28 @@ const assignTypes = (ns, servers) => {
     }
   }
 
-  ns.tprint(`${assignedRam}GB assigned to weaken`);
+  ns.tprint(`${assignedRam.toFixed(3)}GB assigned to weaken`);
 
   assignableServers = Array.from(tempArray).concat(assignableServers);
   tempArray = [];
 
+  let hackAssignedOnce = false;
   assignedRam = 0;
-  ns.tprint(`Assigned servers length ${assignedServers.length}`);
-  ns.tprint(`Assignable servers length ${assignableServers.length}`);
   while (assignedRam <= hackRam && assignableServers.length > 0) {
     const nextServer = assignableServers.shift();
 
-    if (
-      nextServer.ram + assignedRam <= hackRam ||
-      assignedServers.length === 1
-    ) {
+    if (nextServer.ram + assignedRam <= hackRam || !hackAssignedOnce) {
       // always assign one
       nextServer.type = HostType.Hack;
       assignedServers.push(nextServer);
       assignedRam += nextServer.ram;
+      hackAssignedOnce = true;
     } else {
       tempArray.push(nextServer);
     }
   }
 
-  ns.tprint(`${assignedRam}GB assigned to hack`);
+  ns.tprint(`${assignedRam.toFixed(3)}GB assigned to hack`);
 
   assignableServers = Array.from(tempArray).concat(assignableServers);
 
@@ -92,7 +89,7 @@ const assignTypes = (ns, servers) => {
     assignedRam += nextServer.ram;
   }
 
-  ns.tprint(`${assignedRam}GB assigned to grow`);
+  ns.tprint(`${assignedRam.toFixed(3)}GB assigned to grow`);
 
   assignedServers.map(({ name, ram, type }) =>
     ns.tprint(`${name} - ${ram}GB - ${type}`)

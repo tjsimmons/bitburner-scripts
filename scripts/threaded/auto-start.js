@@ -58,7 +58,9 @@ export async function main(ns) {
   // start up the auto-hack and auto-share script on home
   ns.run("/scripts/util/walkAndHack.js");
   await ns.sleep(15000);
-  ns.run("/scripts/util/share.js", 20);
+
+  const shareOverhead = includeHome ? 20 : -1;
+  ns.run("/scripts/util/start-share.js", 1, shareOverhead);
 
   for (const { name } of weakenServers) {
     await startScript(ns, name, target, weakenPad, disabled, disabled);
