@@ -4,7 +4,9 @@ let walked = ["darkweb"];
 export async function main(ns) {
   const hostname = ns.getHostname();
 
+  ns.toast("Beginning to walk server tree", "info");
   walkAndHack(ns, hostname);
+  ns.toast("Finished walking server tree", "success");
 }
 
 /** @param {import("../..").NS} ns */
