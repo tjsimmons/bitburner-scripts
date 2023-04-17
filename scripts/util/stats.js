@@ -23,7 +23,7 @@ function get_all_servers(ns, all = false) {
     var s = ns.scan(server);
     for (var j in s) {
       var con = s[j];
-      if (servers.indexOf(con) < 0 && ns.getServerMaxRam(con) > 4) {
+      if (servers.indexOf(con) < 0) {
         servers.push(con);
         if (
           all ||

@@ -1,7 +1,7 @@
 const Weight = {
-  Weaken: 0.35,
-  Grow: 0.45,
-  Hack: 0.2,
+  Weaken: 0.2,
+  Grow: 0.5,
+  Hack: 0.3,
   Full: 1,
 };
 

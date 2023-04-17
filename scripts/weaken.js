@@ -19,10 +19,12 @@ export async function main(ns) {
   let weakenDidRun = false;
 
   while (currentSecLevel > minSecLevel) {
+    const weakenTimeSecs = Math.round(ns.getWeakenTime(target) / 1000);
+
     ns.tprint(
-      `Weakening ${target} security: ${currentSecLevel.toFixed(
+      `${hostname} WEAKEN ${target} security: ${currentSecLevel.toFixed(
         3
-      )} / ${minSecLevel.toFixed(3)}`
+      )} / ${minSecLevel.toFixed(3)} (${weakenTimeSecs}s)`
     );
 
     await ns.weaken(target);

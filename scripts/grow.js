@@ -20,11 +20,13 @@ export async function main(ns) {
   let growDidRun = false;
 
   do {
+    const growTimeSecs = Math.round(ns.getGrowTime(target) / 1000);
+
     ns.tprint(
-      `Growing ${target} ${currentMoney.toFixed(3)} / ${(
+      `${hostname} GROW ${target} ${currentMoney.toFixed(3)} / ${(
         maxMoney *
         (thresholdPercent / 100)
-      ).toFixed(3)}`
+      ).toFixed(3)} (${growTimeSecs}s)`
     );
 
     await ns.grow(target);

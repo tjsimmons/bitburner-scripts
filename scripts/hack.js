@@ -24,10 +24,12 @@ export async function main(ns) {
   let hackDidRun = false;
 
   while (moneyAvailable >= hackThreshold) {
+    const hackTimeSecs = Math.round(ns.getHackTime(target) / 1000);
+
     ns.tprint(
-      `Hacking ${target} ${moneyAvailable.toFixed(3)} / ${hackThreshold.toFixed(
+      `${hostname} HACK ${target} ${moneyAvailable.toFixed(
         3
-      )}`
+      )} / ${hackThreshold.toFixed(3)} (${hackTimeSecs}s)`
     );
 
     await ns.hack(target);

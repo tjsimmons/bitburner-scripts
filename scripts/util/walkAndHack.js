@@ -29,7 +29,7 @@ const walkAndHack = (ns, hostname) => {
     );*/
 
     if (hackLevel >= reqHacking && !haveRoot) {
-      ns.toast(`Attempting to own ${target}`, "info", 5000);
+      ns.tprint(`Attempting to own ${target}`);
 
       if (ns.fileExists("BruteSSH.exe", "home")) {
         ns.brutessh(target);
@@ -57,7 +57,7 @@ const walkAndHack = (ns, hostname) => {
       }
 
       if (portsOpen >= ns.getServerNumPortsRequired(target)) {
-        ns.toast(`Nuking ${target}`, "success", 5000);
+        ns.tprint(`Nuking ${target}`);
         ns.nuke(target);
       } else {
         ns.toast(`Not enough open ports ${target}`, "error", 5000);

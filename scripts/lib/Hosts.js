@@ -16,84 +16,91 @@ export const All = (ns) => {
 };
 
 export const AllHostsAssigned = (ns) => assignTypes(ns, All(ns));
+export const sortAscending = (a, b) => a - b;
+export const sortDescending = (a, b) => b - a;
 
 const assignTypes = (ns, servers) => {
   let assignableServers = Array.from(servers)
-    .sort((a, b) => a.ram - b.ram)
+    .sort((a, b) => sortDescending(a.ram, b.ram))
     .filter(({ ram }) => ram > 4);
   let tempArray = [];
   let assignedServers = [];
 
-  let totalRam = servers
-    .map((server) => server.ram)
-    .reduce((previousRam, ram) => previousRam + ram);
+  if (servers.length > 0) {
+    const totalRam = servers
+      .map((server) => server.ram)
+      .reduce((previousRam, ram) => previousRam + ram);
 
-  const weakenRam = totalRam * Weight.Weaken;
-  const growRam = totalRam * Weight.Grow;
-  const hackRam = totalRam * Weight.Hack;
+    const weakenRam = totalRam * Weight.Weaken;
+    const growRam = totalRam * Weight.Grow;
+    const hackRam = totalRam * Weight.Hack;
 
-  ns.tprint(`Total RAM ${totalRam}GB`);
-  ns.tprint(`Weaken RAM ${weakenRam.toFixed(3)}GB`);
-  ns.tprint(`Hack RAM ${hackRam.toFixed(3)}GB`);
-  ns.tprint(`Grow RAM ${growRam.toFixed(3)}GB`);
+    // maybe instead of doing it RAM based, we can assign these based on # threads available based on cost
+    // i think i want weakenThreads >= growThreads + hackThreads to make sure we stay at min security
 
-  let assignedRam = 0;
-  while (assignedRam <= weakenRam && assignableServers.length > 0) {
-    const nextServer = assignableServers.shift();
+    ns.tprint(`Total RAM ${totalRam}GB`);
+    ns.tprint(`Weaken RAM ${weakenRam.toFixed(3)}GB`);
+    ns.tprint(`Hack RAM ${hackRam.toFixed(3)}GB`);
+    ns.tprint(`Grow RAM ${growRam.toFixed(3)}GB`);
 
-    if (
-      nextServer.ram + assignedRam <= weakenRam ||
-      assignedServers.length === 0
-    ) {
-      // always assign at least one
-      nextServer.type = HostType.Weaken;
+    let assignedRam = 0;
+    while (assignedRam <= weakenRam && assignableServers.length > 0) {
+      const nextServer = assignableServers.shift();
+
+      if (
+        nextServer.ram + assignedRam <= weakenRam ||
+        assignedServers.length === 0
+      ) {
+        // always assign at least one
+        nextServer.type = HostType.Weaken;
+        assignedServers.push(nextServer);
+        assignedRam += nextServer.ram;
+      } else {
+        tempArray.push(nextServer);
+      }
+    }
+
+    ns.tprint(`${assignedRam.toFixed(3)}GB assigned to weaken`);
+
+    assignableServers = Array.from(tempArray).concat(assignableServers);
+    tempArray = [];
+
+    let hackAssignedOnce = false;
+    assignedRam = 0;
+    while (assignedRam <= hackRam && assignableServers.length > 0) {
+      const nextServer = assignableServers.shift();
+
+      if (nextServer.ram + assignedRam <= hackRam || !hackAssignedOnce) {
+        // always assign one
+        nextServer.type = HostType.Hack;
+        assignedServers.push(nextServer);
+        assignedRam += nextServer.ram;
+        hackAssignedOnce = true;
+      } else {
+        tempArray.push(nextServer);
+      }
+    }
+
+    ns.tprint(`${assignedRam.toFixed(3)}GB assigned to hack`);
+
+    assignableServers = Array.from(tempArray).concat(assignableServers);
+
+    // the leftover servers get to grow, should be the majority
+    assignedRam = 0;
+    while (assignableServers.length > 0) {
+      const nextServer = assignableServers.shift();
+
+      nextServer.type = HostType.Grow;
       assignedServers.push(nextServer);
       assignedRam += nextServer.ram;
-    } else {
-      tempArray.push(nextServer);
     }
+
+    ns.tprint(`${assignedRam.toFixed(3)}GB assigned to grow`);
+
+    assignedServers.map(({ name, ram, type }) =>
+      ns.tprint(`${name} - ${ram}GB - ${type}`)
+    );
   }
-
-  ns.tprint(`${assignedRam.toFixed(3)}GB assigned to weaken`);
-
-  assignableServers = Array.from(tempArray).concat(assignableServers);
-  tempArray = [];
-
-  let hackAssignedOnce = false;
-  assignedRam = 0;
-  while (assignedRam <= hackRam && assignableServers.length > 0) {
-    const nextServer = assignableServers.shift();
-
-    if (nextServer.ram + assignedRam <= hackRam || !hackAssignedOnce) {
-      // always assign one
-      nextServer.type = HostType.Hack;
-      assignedServers.push(nextServer);
-      assignedRam += nextServer.ram;
-      hackAssignedOnce = true;
-    } else {
-      tempArray.push(nextServer);
-    }
-  }
-
-  ns.tprint(`${assignedRam.toFixed(3)}GB assigned to hack`);
-
-  assignableServers = Array.from(tempArray).concat(assignableServers);
-
-  // the leftover servers get to grow, should be the majority
-  assignedRam = 0;
-  while (assignableServers.length > 0) {
-    const nextServer = assignableServers.shift();
-
-    nextServer.type = HostType.Grow;
-    assignedServers.push(nextServer);
-    assignedRam += nextServer.ram;
-  }
-
-  ns.tprint(`${assignedRam.toFixed(3)}GB assigned to grow`);
-
-  assignedServers.map(({ name, ram, type }) =>
-    ns.tprint(`${name} - ${ram}GB - ${type}`)
-  );
 
   return assignedServers;
 };

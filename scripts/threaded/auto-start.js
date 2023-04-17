@@ -9,10 +9,10 @@ const disabled = -1;
 /** @param {import("../..").NS} ns */
 export async function main(ns) {
   const target = ns.args[0];
-  const includeHome = ns.args[1] !== undefined ? ns.args[1] : false;
-  const weakenPad = ns.args[2] !== undefined ? ns.args[2] : 0;
-  const growMaxPercent = ns.args[3] !== undefined ? ns.args[3] : 100;
-  const hackStopPercent = ns.args[4] !== undefined ? ns.args[4] : 25;
+  const includeHome = ns.args[1];
+  const weakenPad = ns.args[2];
+  const growMaxPercent = ns.args[3];
+  const hackStopPercent = ns.args[4];
   const paths = [
     "/scripts/weaken.js",
     "/scripts/grow.js",
@@ -22,6 +22,9 @@ export async function main(ns) {
   ];
 
   let hosts = AllHosts(ns).filter((host) => host.ram > 4);
+  /*const allRam = hosts
+    .map((server) => server.ram)
+    .reduce((prev, next) => prev + next);*/
 
   if (target === undefined) {
     ns.toast("Target must be passed as an argument", "error", 3000);
@@ -29,7 +32,7 @@ export async function main(ns) {
   }
 
   if (includeHome) {
-    hosts.push({ name: "home", ram: null, type: HostType.Grow });
+    hosts.push({ name: "home", ram: null, type: HostType.Hack });
   }
 
   const weakenServers = hosts.filter((host) => host.type === HostType.Weaken);
@@ -61,6 +64,12 @@ export async function main(ns) {
 
   const shareOverhead = includeHome ? 20 : -1;
   ns.run("/scripts/util/start-share.js", 1, shareOverhead);
+
+  ns.tprint(
+    `WEAKEN delay ${ns.getWeakenTime(target) / 1000} GROW delay ${
+      ns.getGrowTime(target) / 1000
+    } HACK delay ${ns.getHackTime(target) / 1000}`
+  );
 
   for (const { name } of weakenServers) {
     await startScript(ns, name, target, weakenPad, disabled, disabled);
