@@ -1,18 +1,23 @@
 import HostType from "/scripts/lib/HostType";
-import { AllHostsAssigned as AllHosts } from "/scripts/lib/Hosts";
+import {
+  AllHostsAssigned as AllHosts,
+  sortDescending,
+} from "/scripts/lib/Hosts";
 
 const mainPath = "/scripts/threaded/main.js";
 const threads = 1;
-const sleepDelay = 500;
+const sleepDelay = 5000;
 const disabled = -1;
 
 /** @param {import("../..").NS} ns */
 export async function main(ns) {
-  const target = ns.args[0];
+  const targetHacking = ns.args[0] / 100;
   const includeHome = ns.args[1];
   const weakenPad = ns.args[2];
   const growMaxPercent = ns.args[3];
   const hackStopPercent = ns.args[4];
+  const minHacknetMoney = ns.args[5];
+  const manualTarget = ns.args[6];
   const paths = [
     "/scripts/weaken.js",
     "/scripts/grow.js",
@@ -22,6 +27,20 @@ export async function main(ns) {
   ];
 
   let hosts = AllHosts(ns).filter((host) => host.ram > 4);
+  const currentHacking = ns.getHackingLevel();
+  let target =
+    manualTarget !== undefined
+      ? manualTarget
+      : hosts
+          .filter((host) => host.reqHacking <= currentHacking * targetHacking)
+          .sort((a, b) => sortDescending(a.maxMoney, b.maxMoney))
+          .shift()?.name;
+
+  // only on resets
+  if (target === undefined) {
+    target = "n00dles";
+  }
+
   /*const allRam = hosts
     .map((server) => server.ram)
     .reduce((prev, next) => prev + next);*/
@@ -53,22 +72,32 @@ export async function main(ns) {
 
   // prepare the servers
   hosts.map(({ name }) => {
-    ns.killall(name);
+    ns.killall(name, true);
 
     paths.map((file) => ns.scp(file, name, "home"));
   });
 
-  // start up the auto-hack and auto-share script on home
   ns.run("/scripts/util/walkAndHack.js");
-  await ns.sleep(15000);
 
-  const shareOverhead = includeHome ? 20 : -1;
-  ns.run("/scripts/util/start-share.js", 1, shareOverhead);
+  await ns.sleep(5000);
+
+  if (!ns.isRunning("/scripts/util/hacknet.js", "home", minHacknetMoney)) {
+    ns.run("/scripts/util/hacknet.js", 1, minHacknetMoney);
+  }
+
+  // start up the auto-hack and auto-share script on home
+  if (!includeHome) {
+    if (!ns.isRunning("/scripts/util/start-share.js", "home", 1)) {
+      ns.run("/scripts/util/start-share.js", 1, 1);
+    }
+  }
 
   ns.tprint(
-    `WEAKEN delay ${ns.getWeakenTime(target) / 1000} GROW delay ${
+    `WEAKEN delay ${Math.round(
+      ns.getWeakenTime(target) / 1000
+    )} GROW delay ${Math.round(
       ns.getGrowTime(target) / 1000
-    } HACK delay ${ns.getHackTime(target) / 1000}`
+    )} HACK delay ${Math.round(ns.getHackTime(target) / 1000)}`
   );
 
   for (const { name } of weakenServers) {

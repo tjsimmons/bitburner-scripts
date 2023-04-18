@@ -105,6 +105,7 @@ const assignTypes = (ns, servers) => {
   return assignedServers;
 };
 
+/** @param {import("../..").NS} ns */
 const scan = (ns, host, walked, servers) => {
   for (const target of ns.scan(host).filter((h) => walked.indexOf(h) === -1)) {
     walked.push(target);
@@ -113,11 +114,15 @@ const scan = (ns, host, walked, servers) => {
 
     if (haveRoot) {
       const maxRam = ns.getServerMaxRam(target);
+      const reqHacking = ns.getServerRequiredHackingLevel(target);
+      const maxMoney = ns.getServerMaxMoney(target);
 
       servers.push({
         name: target,
         ram: maxRam,
         type: null,
+        reqHacking: reqHacking,
+        maxMoney: maxMoney,
       });
     }
 

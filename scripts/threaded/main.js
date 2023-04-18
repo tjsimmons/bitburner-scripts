@@ -8,9 +8,11 @@ import Weight from "/scripts/lib/Weights";
 export async function main(ns) {
   const target = ns.args[0];
   let minWeakenPad = ns.args[1];
-  const growThresholdPercent = ns.args[2];
+  let growThresholdPercent = ns.args[2];
   const hackThresholdPercent = ns.args[3];
   const hostname = ns.getHostname();
+  const secondaryGrowEnabled = true;
+  const secondaryWeakenEnabled = true;
 
   if (target === undefined) {
     ns.toast("Target must be passed as an argument", "error");
@@ -51,6 +53,9 @@ export async function main(ns) {
   let growPID = 0;
   let growThreads = 1;
   let growRunning = false;
+  if (!growEnabled) {
+    growThresholdPercent = 100;
+  }
 
   const hackEnabled = hackThresholdPercent > -1;
   const hackPath = "/scripts/hack.js";
@@ -103,7 +108,8 @@ export async function main(ns) {
     ns.getServerMinSecurityLevel(target) + minWeakenPad;
 
   const targetMaxMoney = ns.getServerMaxMoney(target);
-  let targetPercent = 0;
+  const targetGrowMoney = targetMaxMoney * (growThresholdPercent / 100);
+  const targetHackMoney = targetMaxMoney * (hackThresholdPercent / 100);
 
   const times = [
     ns.getHackTime(target),
@@ -111,9 +117,10 @@ export async function main(ns) {
     ns.getWeakenTime(target),
   ];
 
+  const mainSleepDelay = 100;
+
   // loop here
   while (true) {
-    const mainSleepDelay = Math.round(Math.min(...times) / 3);
     const hostMaxRam = ns.getServerMaxRam(hostname);
     let ramFree = hostMaxRam - ns.getServerUsedRam(hostname);
     const targetSecurityLevel = ns.getServerSecurityLevel(target);
@@ -126,153 +133,187 @@ export async function main(ns) {
     secondaryWeakenRunning = ns.isRunning(secondaryWeakenPID, hostname);
     secondaryWeakenThreads = Math.max(Math.floor(ramFree / weakenCost), 1);
 
-    //ns.tprint(`DELAY ${mainSleepDelay / 1000}s`);
+    //ns.print(`DELAY ${mainSleepDelay / 1000}s`);
 
-    if (weakenEnabled && !weakenRunning && !tertiaryGrowRunning) {
-      weakenThreads = Math.max(
-        Math.floor((ramFree * weakenWeight) / weakenCost),
-        1
-      );
+    if (weakenRunning && targetSecurityLevel <= targetMinSecurityDesired) {
+      ns.tprint(`${hostname} ${target} WEAKEN KILL`);
+      ns.kill(weakenPID);
+    }
 
-      weakenPID = ns.run(weakenPath, weakenThreads, target, minWeakenPad);
-      ns.toast(`${hostname} WEAKEN (${weakenThreads} threads)`, "success");
+    if (
+      secondaryWeakenRunning &&
+      targetSecurityLevel <= targetMinSecurityDesired
+    ) {
+      ns.tprint(`${hostname} ${target} SECONDARY WEAKEN KILL`);
+      ns.kill(secondaryWeakenPID);
+    }
 
-      // wait a second, see if it's running, and if not start a grow to help out at current money + 0%
-      await ns.sleep(1000);
+    if (hackRunning && targetCurrentMoney <= targetHackMoney) {
+      ns.tprint(`${hostname} ${target} HACK KILL`);
+      ns.kill(hackPID);
+    }
 
-      if (!ns.isRunning(weakenPID)) {
-        targetPercent =
-          Math.round(
-            (ns.getServerMoneyAvailable(target) / targetMaxMoney) * 100
-          ) + 0;
+    if (growRunning && targetCurrentMoney >= targetGrowMoney) {
+      ns.tprint(`${hostname} ${target} GROW KILL`);
+      ns.kill(growPID);
+    }
 
-        tertiaryGrowThreads = Math.max(Math.floor(ramFree / growCost), 1);
+    if (
+      secondaryGrowRunning &&
+      (targetCurrentMoney >= targetGrowMoney ||
+        targetCurrentMoney >= targetHackMoney)
+    ) {
+      ns.tprint(`${hostname} ${target} SECONDARY GROW KILL`);
+      ns.kill(secondaryGrowPID);
+    }
 
-        tertiaryGrowPID = ns.run(
-          growPath,
-          tertiaryGrowThreads,
-          target,
-          targetPercent
+    if (
+      tertiaryGrowRunning &&
+      (targetCurrentMoney >= targetGrowMoney ||
+        targetSecurityLevel > targetMinSecurityDesired)
+    ) {
+      ns.tprint(`${hostname} ${target} TERTIARY GROW KILL`);
+      ns.kill(tertiaryGrowPID);
+    }
+
+    if (
+      !weakenRunning &&
+      !growRunning &&
+      !hackRunning &&
+      !secondaryWeakenRunning &&
+      !secondaryGrowRunning &&
+      !tertiaryGrowRunning
+    ) {
+      if (weakenEnabled && !weakenRunning && !tertiaryGrowRunning) {
+        weakenThreads = Math.max(
+          Math.floor((ramFree * weakenWeight) / weakenCost),
+          1
         );
 
-        ns.toast(
-          `${hostname} TERTIARY GROW ${targetPercent}% (${tertiaryGrowThreads} threads)`,
-          "success"
-        );
-      } else if (
-        !ns.isRunning(weakenPID) &&
-        ns.isRunning(tertiaryGrowPID) &&
-        targetSecuritylevel >= targetMinSecurityDesired
-      ) {
-        ns.toast(`${hostname} KILLING GROW`);
-        ns.kill(tertiaryGrowPID);
-      }
-    } else if (weakenEnabled) {
-      /*ns.toast(
+        weakenPID = ns.run(weakenPath, weakenThreads, target, minWeakenPad);
+        ns.toast(`${hostname} WEAKEN (${weakenThreads} threads)`, "success");
+
+        // wait a second, see if it's running, and if not start a grow to help out at current money + 0%
+        await ns.sleep(1000);
+
+        if (!ns.isRunning(weakenPID)) {
+          tertiaryGrowThreads = Math.max(Math.floor(ramFree / growCost), 1);
+
+          tertiaryGrowPID = ns.run(
+            growPath,
+            tertiaryGrowThreads,
+            target,
+            growThresholdPercent
+          );
+
+          ns.toast(
+            `${hostname} TERTIARY GROW ${growThresholdPercent}% (${tertiaryGrowThreads} threads)`,
+            "success"
+          );
+        } else if (
+          !ns.isRunning(weakenPID) &&
+          ns.isRunning(tertiaryGrowPID) &&
+          targetSecuritylevel >= targetMinSecurityDesired
+        ) {
+          ns.toast(`${hostname} KILLING GROW`);
+          ns.kill(tertiaryGrowPID);
+        }
+      } else if (weakenEnabled) {
+        /*ns.toast(
         `${hostname} ${
           weakenRunning ? "WEAKEN" : tertiaryGrowRunning ? "TERTIARY GROW" : ""
         } still executing`,
         "info",
         5000
       );*/
-    }
-
-    // skip grow and hack if security is too high - they'll take ages
-    // use them to weaken instead
-    if (
-      targetSecurityLevel >= targetMinSecurityDesired &&
-      !secondaryWeakenRunning &&
-      !weakenEnabled &&
-      !(secondaryGrowRunning || hackRunning || weakenRunning)
-    ) {
-      secondaryWeakenPID = ns.run(
-        weakenPath,
-        secondaryWeakenThreads,
-        target,
-        minWeakenPad
-      );
-
-      ns.toast(
-        `${hostname} SECONDARY WEAKEN (${secondaryWeakenThreads} threads)`,
-        "success"
-      );
-    } else if (
-      targetSecurityLevel > targetMinSecurityDesired &&
-      secondaryWeakenRunning
-    ) {
-      //ns.toast(`${hostname} SECONDARY WEAKEN still executing`, "info", 5000);
-    } else {
-      if (secondaryWeakenRunning) {
-        ns.kill(secondaryWeakenPID);
       }
 
-      secondaryWeakenPID = 0;
-
-      hostMaxRam - ns.getServerUsedRam(hostname);
-      growThreads = Math.max(Math.floor((ramFree * growWeight) / growCost), 1);
-      hackThreads = Math.max(Math.floor((ramFree * hackWeight) / hackCost), 1);
-      secondaryGrowThreads = Math.max(
-        Math.floor((ramFree * hackWeight) / growCost),
-        1
-      );
-      tertiaryGrowThreads = Math.max(
-        Math.floor((ramFree * weakenWeight) / growCost),
-        1
-      );
-
-      if (growEnabled && !growRunning) {
-        growPID = ns.run(growPath, growThreads, target, growThresholdPercent);
-        ns.toast(`${hostname} GROW (${growThreads} threads)`, "success");
-      } else if (growEnabled) {
-        //ns.toast(`${hostname} GROW still executing`, "info", 5000);
-      }
-
-      if (hackEnabled && !hackRunning && !secondaryGrowRunning) {
-        hackPID = ns.run(hackPath, hackThreads, target, hackThresholdPercent);
-        ns.toast(`${hostname} HACK (${hackThreads} threads)`, "success");
-
-        // wait a second, see if it's running, and if not start a grow to help out at current money + 5%
-        await ns.sleep(1000);
-
-        if (
-          !ns.isRunning(hackPID) &&
-          ns.getServerMoneyAvailable(target) < targetMaxMoney
-        ) {
-          targetPercent = 1;
-
-          secondaryGrowPID = ns.run(
-            growPath,
-            secondaryGrowThreads,
+      // skip grow and hack if security is too high - they'll take ages
+      // use them to weaken instead
+      if (
+        secondaryWeakenEnabled &&
+        targetSecurityLevel >= targetMinSecurityDesired &&
+        !secondaryWeakenRunning &&
+        !weakenEnabled &&
+        !(secondaryGrowRunning || hackRunning || weakenRunning)
+      ) {
+        if (secondaryWeakenThreads > 1) {
+          secondaryWeakenPID = ns.run(
+            weakenPath,
+            secondaryWeakenThreads,
             target,
-            targetPercent
+            minWeakenPad
           );
 
-          /*ns.toast(
-            `${hostname} SECONDARY GROW ${targetPercent}% (${secondaryGrowThreads} threads)`,
+          ns.toast(
+            `${hostname} SECONDARY WEAKEN (${secondaryWeakenThreads} threads)`,
             "success"
-          );*/
-        } else if (
-          !ns.isRunning(hackPID) &&
-          ns.isRunning(secondaryGrowPID) &&
-          targetCurrentMoney > targetCurrentMoney * targetPercent
-        ) {
-          ns.toast(`${hostname} KILLING GROW`);
-          ns.kill(secondaryGrowPID);
+          );
         }
       } else if (
-        hackRunning &&
-        targetCurrentMoney <= targetMaxMoney * (targetPercent / 100)
+        targetSecurityLevel > targetMinSecurityDesired &&
+        secondaryWeakenRunning
       ) {
-        ns.tprint(`${hostname} ${target} HACK KILL`);
-        ns.kill(hackPID);
-      } else if (hackEnabled) {
-        /*ns.toast(
+        //ns.toast(`${hostname} SECONDARY WEAKEN still executing`, "info", 5000);
+      } else {
+        if (secondaryWeakenRunning) {
+          ns.kill(secondaryWeakenPID);
+        }
+
+        secondaryWeakenPID = 0;
+
+        hostMaxRam - ns.getServerUsedRam(hostname);
+        growThreads = Math.max(
+          Math.floor((ramFree * growWeight) / growCost),
+          1
+        );
+        hackThreads = Math.max(
+          Math.floor((ramFree * hackWeight) / hackCost),
+          1
+        );
+        secondaryGrowThreads = Math.max(Math.floor(ramFree / growCost), 1);
+        tertiaryGrowThreads = Math.max(Math.floor(ramFree / growCost), 1);
+
+        if (growEnabled && !growRunning) {
+          growPID = ns.run(growPath, growThreads, target, growThresholdPercent);
+          ns.toast(`${hostname} GROW (${growThreads} threads)`, "success");
+        } else if (growEnabled) {
+          //ns.toast(`${hostname} GROW still executing`, "info", 5000);
+        }
+
+        if (hackEnabled && !hackRunning && !secondaryGrowRunning) {
+          hackPID = ns.run(hackPath, hackThreads, target, hackThresholdPercent);
+          ns.toast(`${hostname} HACK (${hackThreads} threads)`, "success");
+
+          // wait a second, see if it's running, and if not start a grow to help out at current money + 5%
+          await ns.sleep(1000);
+
+          if (
+            secondaryGrowEnabled &&
+            !ns.isRunning(hackPID) &&
+            ns.getServerMoneyAvailable(target) < targetGrowMoney
+          ) {
+            secondaryGrowPID = ns.run(
+              growPath,
+              secondaryGrowThreads,
+              target,
+              growThresholdPercent
+            );
+
+            ns.toast(
+              `${hostname} SECONDARY GROW ${growThresholdPercent}% (${secondaryGrowThreads} threads)`,
+              "success"
+            );
+          }
+        } else if (hackEnabled) {
+          /*ns.toast(
           `${hostname} ${
             hackRunning ? "HACK" : secondaryGrowRunning ? "SECONDARY GROW" : ""
           } still executing`,
           "info",
           5000
         );*/
+        }
       }
     }
 

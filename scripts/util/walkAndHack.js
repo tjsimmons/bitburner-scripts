@@ -24,9 +24,9 @@ const walkAndHack = (ns, hostname) => {
     const haveRoot = ns.hasRootAccess(target);
     const hackLevel = ns.getHackingLevel();
 
-    /*ns.tprint(
-      `${target} req hacking ${reqHacking} / ${hackLevel} rooted ${haveRoot}`
-    );*/
+    if (target === "run4theh111z") {
+      //ns.tprint(`run4theh111z seen from ${hostname}`);
+    }
 
     if (hackLevel >= reqHacking && !haveRoot) {
       ns.tprint(`Attempting to own ${target}`);
