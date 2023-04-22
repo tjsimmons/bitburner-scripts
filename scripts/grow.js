@@ -42,13 +42,13 @@ export async function main(ns) {
   if (growDidRun) {
     ns.toast(`${target} grown to ${currentMoney.toFixed(3)}`, "success", 10000);
   } else {
-    ns.toast(
+    /*ns.toast(
       `${hostname} did not run grow against ${target} ${currentMoney.toFixed(
         3
       )} / ${(maxMoney * (thresholdPercent / 100)).toFixed(3)}`,
       "error",
       5000
-    );
+    );*/
   }
 }
 

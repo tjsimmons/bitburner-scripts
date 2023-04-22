@@ -6,7 +6,7 @@ import {
 
 const mainPath = "/scripts/threaded/main.js";
 const threads = 1;
-const sleepDelay = 5000;
+const sleepDelay = 500;
 const disabled = -1;
 
 /** @param {import("../..").NS} ns */
@@ -25,6 +25,9 @@ export async function main(ns) {
     "/scripts/lib/Weights.js",
     mainPath,
   ];
+
+  ns.run("/scripts/util/walkAndHack.js");
+  await ns.sleep(1000);
 
   let hosts = AllHosts(ns).filter((host) => host.ram > 4);
   const currentHacking = ns.getHackingLevel();
@@ -77,8 +80,6 @@ export async function main(ns) {
     paths.map((file) => ns.scp(file, name, "home"));
   });
 
-  ns.run("/scripts/util/walkAndHack.js");
-
   await ns.sleep(5000);
 
   if (!ns.isRunning("/scripts/util/hacknet.js", "home", minHacknetMoney)) {
@@ -87,7 +88,7 @@ export async function main(ns) {
 
   // start up the auto-hack and auto-share script on home
   if (!includeHome) {
-    if (!ns.isRunning("/scripts/util/start-share.js", "home", 1)) {
+    if (!ns.isRunning("/scripts/util/share.js", "home")) {
       ns.run("/scripts/util/start-share.js", 1, 1);
     }
   }

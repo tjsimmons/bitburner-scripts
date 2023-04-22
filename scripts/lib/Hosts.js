@@ -20,9 +20,10 @@ export const sortAscending = (a, b) => a - b;
 export const sortDescending = (a, b) => b - a;
 
 const assignTypes = (ns, servers) => {
-  let assignableServers = Array.from(servers)
-    .sort((a, b) => sortDescending(a.ram, b.ram))
-    .filter(({ ram }) => ram > 4);
+  let assignableServers = Array.from(servers).sort((a, b) =>
+    sortDescending(a.ram, b.ram)
+  );
+  //.filter(({ ram }) => ram > 4);
   let tempArray = [];
   let assignedServers = [];
 
@@ -49,9 +50,8 @@ const assignTypes = (ns, servers) => {
 
       if (
         nextServer.ram + assignedRam <= weakenRam ||
-        assignedServers.length === 0
+        assignedServers.length === 0 // always assign at least one
       ) {
-        // always assign at least one
         nextServer.type = HostType.Weaken;
         assignedServers.push(nextServer);
         assignedRam += nextServer.ram;

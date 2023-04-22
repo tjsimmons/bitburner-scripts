@@ -43,12 +43,12 @@ export async function main(ns) {
       10000
     );
   } else {
-    ns.toast(
+    /*ns.toast(
       `${hostname} did not run weaken against ${target} ${currentSecLevel.toFixed(
         3
       )} / ${minSecLevel.toFixed(3)}`,
       "error",
       5000
-    );
+    );*/
   }
 }
